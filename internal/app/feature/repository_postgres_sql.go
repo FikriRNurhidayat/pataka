@@ -1,4 +1,4 @@
-package feature_repository
+package feature
 
 const LIST_SQL = `
 SELECT features.name,
@@ -26,8 +26,9 @@ DO
 		updated_at = :updated_at, enabled_at = :enabled_at;
 `
 
-const SIZE_SQL = "SELECT COUNT(*) FROM features"
-
+const SIZE_SQL = `
+SELECT COUNT(*) FROM features
+`
 const GET_SQL = `
 SELECT features.name,
 	   features.label,

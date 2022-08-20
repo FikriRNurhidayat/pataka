@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/fikrirnurhidayat/ffgo/gen/proto/go/featureflag/v1"
-	"github.com/fikrirnurhidayat/ffgo/internal/app/authentication"
+	"github.com/fikrirnurhidayat/ffgo/internal/app/feature"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -21,18 +21,14 @@ import (
 )
 
 var (
-	GRPC_PORT             string
-	GRPC_ENDPOINT         string
-	GATEWAY_PORT          string
-	GATEWAY_ENDPOINT      string
-	logger                grpclog.LoggerV2
-	db                    *sqlx.DB
-	authenticationService authentication.Authenticatable
+	GRPC_PORT        string
+	GRPC_ENDPOINT    string
+	GATEWAY_PORT     string
+	GATEWAY_ENDPOINT string
+	logger           grpclog.LoggerV2
+	db               *sqlx.DB
+	featureServer    featureflag.FeatureServiceServer
 )
-
-func initAuthenticationService() {
-	authenticationService = authentication.NewAuthenticaticationService(viper.GetString("admin.secret"))
-}
 
 func initInfra() {
 	logger = grpclog.NewLoggerV2WithVerbosity(os.Stdout, ioutil.Discard, ioutil.Discard, viper.GetInt("log.level"))
@@ -72,10 +68,20 @@ func createGateway(ctx context.Context) *http.Server {
 	}
 }
 
+func initServer() {
+	featureServer = feature.NewServer(
+		feature.WithDB(db),
+		feature.WithLogger(logger),
+	)
+}
+
+func registerServer(server *grpc.Server) {
+	featureflag.RegisterFeatureServiceServer(server, featureServer)
+}
+
 func Serve() {
 	initInfra()
-	initAuthenticationService()
-	initFeatureServer()
+	initServer()
 
 	GRPC_PORT = viper.GetString("grpc.port")
 	GRPC_ENDPOINT = fmt.Sprintf(":%s", GRPC_PORT)
@@ -92,13 +98,12 @@ func Serve() {
 		logger.Fatalf("[net] failed to initialize TCP connection: %s", err.Error())
 	}
 
-	server := grpc.NewServer()
+	s := grpc.NewServer()
 	grpclog.SetLoggerV2(logger)
 
-	// Register featureServer
-	featureflag.RegisterFeatureServiceServer(server, featureServer)
+	registerServer(s)
 
-	go server.Serve(lis)
+	go s.Serve(lis)
 
 	// Gateway
 	gateway := createGateway(ctx)

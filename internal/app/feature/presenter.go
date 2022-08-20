@@ -2,7 +2,6 @@ package feature
 
 import (
 	"github.com/fikrirnurhidayat/ffgo/gen/proto/go/featureflag/v1"
-	"github.com/fikrirnurhidayat/ffgo/internal/domain"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -25,13 +24,13 @@ func ToFeaturesProtoResponse(result *ListResult) *featureflag.ListFeaturesRespon
 	return res
 }
 
-func ToFeatureProtoResponse[T ProtoFeatureable](feature *domain.Feature) *T {
+func ToFeatureProtoResponse[T ProtoFeatureable](feature *Feature) *T {
 	return &T{
 		Feature: ToFeatureProto(feature),
 	}
 }
 
-func ToFeatureProto(feature *domain.Feature) *featureflag.Feature {
+func ToFeatureProto(feature *Feature) *featureflag.Feature {
 	res := &featureflag.Feature{
 		Name:      feature.Name,
 		Label:     feature.Label,
@@ -40,8 +39,8 @@ func ToFeatureProto(feature *domain.Feature) *featureflag.Feature {
 		UpdatedAt: timestamppb.New(feature.UpdatedAt),
 	}
 
-	if !feature.EnabledAt.Time.IsZero() {
-		res.EnabledAt = timestamppb.New(feature.EnabledAt.Time)
+	if !feature.EnabledAt.IsZero() {
+		res.EnabledAt = timestamppb.New(feature.EnabledAt)
 	}
 
 	return res

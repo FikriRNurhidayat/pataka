@@ -2,11 +2,9 @@ package feature
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
-	"github.com/fikrirnurhidayat/ffgo/internal/app/authentication"
-	"github.com/fikrirnurhidayat/ffgo/internal/domain"
+	"github.com/fikrirnurhidayat/ffgo/internal/auth"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
@@ -17,13 +15,13 @@ type Createable interface {
 }
 
 type CreateFeatureService struct {
-	AuthenticationService authentication.Authenticatable
-	FeatureRepository     domain.FeatureRepository
-	Logger                grpclog.LoggerV2
+	Authentication    auth.Authenticatable
+	FeatureRepository FeatureRepository
+	Logger            grpclog.LoggerV2
 }
 
 func (s *CreateFeatureService) Call(ctx context.Context, params *CreateParams) (*CreateResult, error) {
-	if err := s.AuthenticationService.Valid(ctx); err != nil {
+	if err := s.Authentication.Valid(ctx); err != nil {
 		return nil, err
 	}
 
@@ -37,7 +35,7 @@ func (s *CreateFeatureService) Call(ctx context.Context, params *CreateParams) (
 		return nil, status.Error(codes.InvalidArgument, "Feature already exists")
 	}
 
-	feature = &domain.Feature{
+	feature = &Feature{
 		Name:             params.Name,
 		Label:            params.Label,
 		Enabled:          params.Enabled,
@@ -45,12 +43,11 @@ func (s *CreateFeatureService) Call(ctx context.Context, params *CreateParams) (
 		HasAudienceGroup: false,
 		CreatedAt:        time.Now().Local(),
 		UpdatedAt:        time.Now().Local(),
-		EnabledAt:        sql.NullTime{},
+		EnabledAt:        time.Time{},
 	}
 
 	if params.Enabled {
-		feature.EnabledAt.Time = time.Now().Local()
-		feature.EnabledAt.Valid = true
+		feature.EnabledAt = time.Now().Local()
 	}
 
 	if err := s.FeatureRepository.Save(ctx, feature); err != nil {
@@ -62,13 +59,13 @@ func (s *CreateFeatureService) Call(ctx context.Context, params *CreateParams) (
 }
 
 func NewCreateFeatureService(
-	AuthenticationService authentication.Authenticatable,
-	FeatureRepository domain.FeatureRepository,
+	Authentication auth.Authenticatable,
+	FeatureRepository FeatureRepository,
 	Logger grpclog.LoggerV2,
 ) Createable {
 	return &CreateFeatureService{
-		AuthenticationService: AuthenticationService,
-		FeatureRepository:     FeatureRepository,
-		Logger:                Logger,
+		Authentication:    Authentication,
+		FeatureRepository: FeatureRepository,
+		Logger:            Logger,
 	}
 }

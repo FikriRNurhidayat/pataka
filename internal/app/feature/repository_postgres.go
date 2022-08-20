@@ -1,10 +1,9 @@
-package feature_repository
+package feature
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/fikrirnurhidayat/ffgo/internal/domain"
 	"github.com/jmoiron/sqlx"
 	"google.golang.org/grpc/grpclog"
 )
@@ -30,7 +29,7 @@ var SORT_MAP = map[string]string{
 	"enabled_at":         "features.enabled_at",
 }
 
-func (r *PostgresFeatureRepository) Get(ctx context.Context, name string) (feature *domain.Feature, err error) {
+func (r *PostgresFeatureRepository) Get(ctx context.Context, name string) (feature *Feature, err error) {
 	stmt, err := r.PrepareContext(ctx, GET_SQL)
 	if err != nil {
 		r.Logger.Errorf("[PostgresFeatureRepository] failed to prepare get statement: %s", err.Error())
@@ -54,7 +53,7 @@ func (r *PostgresFeatureRepository) Get(ctx context.Context, name string) (featu
 	return feature, nil
 }
 
-func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.FeatureListArgs) (features []domain.Feature, err error) {
+func (r *PostgresFeatureRepository) List(ctx context.Context, args *FeatureListArgs) (features []Feature, err error) {
 	var (
 		query string = LIST_SQL
 		qargs []interface{}
@@ -68,7 +67,7 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.Featu
 		}
 
 		if filterQuery != "" {
-			query = fmt.Sprint(query, "AND ", filterQuery)
+			query = fmt.Sprint(query, "WHERE ", filterQuery)
 			qargs = append(qargs, filterArgs...)
 		}
 	}
@@ -89,8 +88,6 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.Featu
 
 	query = r.Rebind(query)
 
-	r.Logger.Info(query)
-
 	stmt, err := r.PrepareContext(ctx, query)
 	if err != nil {
 		r.Logger.Errorf("[postgres-feature-repository] failed to prepare list statement: %s", err.Error())
@@ -103,7 +100,7 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.Featu
 		return features, err
 	}
 
-	features = []domain.Feature{}
+	features = []Feature{}
 
 	for rows.Next() {
 		feature, err := r.Scan(rows)
@@ -117,9 +114,26 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.Featu
 	return features, nil
 }
 
-func (r *PostgresFeatureRepository) Save(ctx context.Context, feature *domain.Feature) error {
+func (r *PostgresFeatureRepository) Save(ctx context.Context, feature *Feature) error {
 	query := SAVE_SQL
-	query, qargs, err := r.BindNamed(query, feature)
+
+	args := map[string]interface{}{
+		"name":               feature.Name,
+		"label":              feature.Label,
+		"enabled":            feature.Enabled,
+		"has_audience":       feature.HasAudience,
+		"has_audience_group": feature.HasAudienceGroup,
+		"created_at":         feature.CreatedAt,
+		"updated_at":         feature.UpdatedAt,
+	}
+
+	if !feature.EnabledAt.IsZero() {
+		args["enabled_at"] = feature.EnabledAt
+	} else {
+		args["enabled_at"] = nil
+	}
+
+	query, qargs, err := r.BindNamed(query, args)
 	if err != nil {
 		r.Logger.Errorf("[postgres-feature-repository] failed to bind query for save operation: %s", err.Error())
 		return err
@@ -156,7 +170,7 @@ func (r *PostgresFeatureRepository) Delete(ctx context.Context, name string) err
 	return nil
 }
 
-func (r *PostgresFeatureRepository) Size(ctx context.Context, args *domain.FeatureFilterArgs) (uint32, error) {
+func (r *PostgresFeatureRepository) Size(ctx context.Context, args *FeatureFilterArgs) (uint32, error) {
 	var (
 		query string = SIZE_SQL
 		qargs []interface{}
@@ -170,7 +184,7 @@ func (r *PostgresFeatureRepository) Size(ctx context.Context, args *domain.Featu
 		}
 
 		if filterQuery != "" {
-			query = fmt.Sprint(query, "AND ", filterQuery)
+			query = fmt.Sprint(query, "WHERE ", filterQuery)
 			qargs = append(qargs, filterArgs...)
 		}
 	}
@@ -202,7 +216,7 @@ func (r *PostgresFeatureRepository) Size(ctx context.Context, args *domain.Featu
 	return uint32(count), nil
 }
 
-func NewPostgresFeatureRepository(db DB, Logger grpclog.LoggerV2) domain.FeatureRepository {
+func NewPostgresFeatureRepository(db DB, Logger grpclog.LoggerV2) FeatureRepository {
 	r := new(PostgresFeatureRepository)
 
 	r.Logger = Logger

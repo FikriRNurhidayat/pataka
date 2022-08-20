@@ -48,12 +48,18 @@ message GetFeatureResponse {
 }
 
 /* rpc ListFeatures */
+enum FeatureStatus {
+  FEATURE_STATUS_UNSPECIFIED = 0;
+  FEATURE_STATUS_ENABLED = 1;
+  FEATURE_STATUS_DISABLED = 2;
+}
+
 message ListFeaturesRequest {
   uint32 page_number = 1;
   uint32 page_size = 2;
   string sort = 3;
   string q = 4;
-  bool enabled = 5;
+  FeatureStatus status = 5;
 }
 message ListFeaturesResponse {
   uint32 page_number = 1;

@@ -6,7 +6,7 @@ import (
 	"github.com/fikrirnurhidayat/ffgo/gen/proto/go/featureflag/v1"
 )
 
-func (s *FeatureServer) DeleteFeature(ctx context.Context, req *featureflag.DeleteFeatureRequest) (*featureflag.DeleteFeatureResponse, error) {
+func (s *Server) DeleteFeature(ctx context.Context, req *featureflag.DeleteFeatureRequest) (*featureflag.DeleteFeatureResponse, error) {
 	err := s.Delete.Call(ctx, &DeleteParams{
 		Name: req.GetName(),
 	})

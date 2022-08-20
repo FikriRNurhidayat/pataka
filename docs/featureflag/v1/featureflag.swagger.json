@@ -68,10 +68,16 @@
             "type": "string"
           },
           {
-            "name": "enabled",
+            "name": "status",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string",
+            "enum": [
+              "FEATURE_STATUS_UNSPECIFIED",
+              "FEATURE_STATUS_ENABLED",
+              "FEATURE_STATUS_DISABLED"
+            ],
+            "default": "FEATURE_STATUS_UNSPECIFIED"
           }
         ],
         "tags": [
@@ -300,6 +306,16 @@
           "format": "date-time"
         }
       }
+    },
+    "v1FeatureStatus": {
+      "type": "string",
+      "enum": [
+        "FEATURE_STATUS_UNSPECIFIED",
+        "FEATURE_STATUS_ENABLED",
+        "FEATURE_STATUS_DISABLED"
+      ],
+      "default": "FEATURE_STATUS_UNSPECIFIED",
+      "title": "rpc ListFeatures"
     },
     "v1GetFeatureResponse": {
       "type": "object",

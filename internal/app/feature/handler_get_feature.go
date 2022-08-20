@@ -6,7 +6,7 @@ import (
 	"github.com/fikrirnurhidayat/ffgo/gen/proto/go/featureflag/v1"
 )
 
-func (s *FeatureServer) GetFeature(ctx context.Context, req *featureflag.GetFeatureRequest) (*featureflag.GetFeatureResponse, error) {
+func (s *Server) GetFeature(ctx context.Context, req *featureflag.GetFeatureRequest) (*featureflag.GetFeatureResponse, error) {
 	result, err := s.Get.Call(ctx, &GetParams{
 		Name: req.GetName(),
 	})

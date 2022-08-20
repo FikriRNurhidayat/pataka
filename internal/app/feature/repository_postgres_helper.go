@@ -1,18 +1,17 @@
-package feature_repository
+package feature
 
 import (
 	"database/sql"
 	"fmt"
 	"strings"
 
-	"github.com/fikrirnurhidayat/ffgo/internal/domain"
 	"github.com/jmoiron/sqlx"
 )
 
 // Build the Filter Statement for List Features
 // It will dynamically append the SQL string
 // based on the argument being passed
-func (r *PostgresFeatureRepository) Filter(filter domain.FeatureFilterArgs) (query string, args []interface{}, err error) {
+func (r *PostgresFeatureRepository) Filter(filter FeatureFilterArgs) (query string, args []interface{}, err error) {
 	queries := []string{}
 
 	if filter.Q != "" {
@@ -20,8 +19,8 @@ func (r *PostgresFeatureRepository) Filter(filter domain.FeatureFilterArgs) (que
 		queries = append(queries, "((features.name ILIKE :q) OR (features.label ILIKE :q) OR (features.name ILIKE :q))")
 	}
 
-	if filter.Enabled {
-		queries = append(queries, "(features.enabled IS TRUE)")
+	if filter.Enabled != nil {
+		queries = append(queries, "(features.enabled = :enabled)")
 	}
 
 	if filter.Name != "" {
@@ -73,14 +72,15 @@ func (r *PostgresFeatureRepository) Sort(sortStr string, allowedCols map[string]
 // It will dynamically append the SQL string
 // based on the argument being passed
 func (r *PostgresFeatureRepository) Paginate(limit uint32, offset uint32) (query string, args []interface{}) {
-	query = "LIMIT ? OFFSET ?"
+	query = " LIMIT ? OFFSET ?"
 	args = []interface{}{limit, offset}
 	return query, args
 }
 
 // Scan the query result, map it into Feature entity
-func (r *PostgresFeatureRepository) Scan(rows *sql.Rows) (*domain.Feature, error) {
-	feature := &domain.Feature{}
+func (r *PostgresFeatureRepository) Scan(rows *sql.Rows) (*Feature, error) {
+	feature := &Feature{}
+	ea := sql.NullTime{}
 
 	if err := rows.Scan(
 		&feature.Name,
@@ -90,10 +90,14 @@ func (r *PostgresFeatureRepository) Scan(rows *sql.Rows) (*domain.Feature, error
 		&feature.HasAudienceGroup,
 		&feature.CreatedAt,
 		&feature.UpdatedAt,
-		&feature.EnabledAt,
+		&ea,
 	); err != nil {
 		r.Logger.Errorf("[PostgresFeatureRepository] failed to scan: %s", err.Error())
 		return nil, err
+	}
+
+	if ea.Valid {
+		feature.EnabledAt = ea.Time
 	}
 
 	return feature, nil

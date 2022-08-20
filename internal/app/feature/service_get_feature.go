@@ -3,7 +3,6 @@ package feature
 import (
 	"context"
 
-	"github.com/fikrirnurhidayat/ffgo/internal/domain"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
@@ -14,7 +13,7 @@ type Getable interface {
 }
 
 type GetFeatureService struct {
-	FeatureRepository domain.FeatureRepository
+	FeatureRepository FeatureRepository
 	Logger            grpclog.LoggerV2
 }
 
@@ -33,7 +32,7 @@ func (s *GetFeatureService) Call(ctx context.Context, params *GetParams) (*GetRe
 }
 
 func NewGetFeatureService(
-	FeatureRepository domain.FeatureRepository,
+	FeatureRepository FeatureRepository,
 	Logger grpclog.LoggerV2,
 ) Getable {
 	return &GetFeatureService{

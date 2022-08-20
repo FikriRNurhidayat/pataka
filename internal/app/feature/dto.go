@@ -1,7 +1,6 @@
 package feature
 
 import (
-	"github.com/fikrirnurhidayat/ffgo/internal/domain"
 	"github.com/fikrirnurhidayat/ffgo/internal/manager"
 )
 
@@ -12,20 +11,20 @@ type CreateParams struct {
 }
 
 type CreateResult struct {
-	Feature *domain.Feature
+	Feature *Feature
 }
 
 type ListParams struct {
 	manager.PaginationParams
 	Sort    string
 	Q       string
-	Enabled bool
+	Enabled *bool
 }
 
 type ListResult struct {
 	manager.PaginationResult
 	Size     uint32
-	Features []domain.Feature
+	Features []Feature
 }
 
 type GetParams struct {
@@ -33,7 +32,7 @@ type GetParams struct {
 }
 
 type GetResult struct {
-	Feature *domain.Feature
+	Feature *Feature
 }
 
 type UpdateParams struct {
@@ -43,7 +42,7 @@ type UpdateParams struct {
 }
 
 type UpdateResult struct {
-	Feature *domain.Feature
+	Feature *Feature
 }
 
 type DeleteParams struct {
@@ -54,7 +53,7 @@ type ResultFeatureable interface {
 	GetResult | CreateResult | UpdateResult
 }
 
-func ToFeatureResult[T ResultFeatureable](feature *domain.Feature) *T {
+func ToFeatureResult[T ResultFeatureable](feature *Feature) *T {
 	return &T{
 		Feature: feature,
 	}

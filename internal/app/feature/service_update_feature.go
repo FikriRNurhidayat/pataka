@@ -2,11 +2,9 @@ package feature
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
-	"github.com/fikrirnurhidayat/ffgo/internal/app/authentication"
-	"github.com/fikrirnurhidayat/ffgo/internal/domain"
+	"github.com/fikrirnurhidayat/ffgo/internal/auth"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
@@ -17,13 +15,13 @@ type Updatable interface {
 }
 
 type UpdateFeatureService struct {
-	AuthenticationService authentication.Authenticatable
-	FeatureRepository     domain.FeatureRepository
-	Logger                grpclog.LoggerV2
+	Authentication    auth.Authenticatable
+	FeatureRepository FeatureRepository
+	Logger            grpclog.LoggerV2
 }
 
 func (s *UpdateFeatureService) Call(ctx context.Context, params *UpdateParams) (*UpdateResult, error) {
-	if err := s.AuthenticationService.Valid(ctx); err != nil {
+	if err := s.Authentication.Valid(ctx); err != nil {
 		return nil, err
 	}
 
@@ -40,19 +38,13 @@ func (s *UpdateFeatureService) Call(ctx context.Context, params *UpdateParams) (
 	// Update EnabledAt by now
 	// If the feature is initially disabled then enabled by this action
 	if !feature.Enabled && params.Enabled {
-		feature.EnabledAt = sql.NullTime{
-			Time:  time.Now().Local(),
-			Valid: true,
-		}
+		feature.EnabledAt = time.Now().Local()
 	}
 
 	// Update EnabledAt by zero
 	// If the feature is initially enabled then disabled by this action
 	if feature.Enabled && !params.Enabled {
-		feature.EnabledAt = sql.NullTime{
-			Time:  time.Time{},
-			Valid: false,
-		}
+		feature.EnabledAt = time.Time{}
 	}
 
 	feature.Label = params.Label
@@ -67,13 +59,13 @@ func (s *UpdateFeatureService) Call(ctx context.Context, params *UpdateParams) (
 }
 
 func NewUpdateFeatureService(
-	AuthenticationService authentication.Authenticatable,
-	FeatureRepository domain.FeatureRepository,
+	Authentication auth.Authenticatable,
+	FeatureRepository FeatureRepository,
 	Logger grpclog.LoggerV2,
 ) Updatable {
 	return &UpdateFeatureService{
-		AuthenticationService: AuthenticationService,
-		FeatureRepository:     FeatureRepository,
-		Logger:                Logger,
+		Authentication:    Authentication,
+		FeatureRepository: FeatureRepository,
+		Logger:            Logger,
 	}
 }

@@ -3,7 +3,6 @@ package feature
 import (
 	"context"
 
-	"github.com/fikrirnurhidayat/ffgo/internal/domain"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
@@ -14,19 +13,19 @@ type Listable interface {
 }
 
 type ListFeaturesService struct {
-	FeatureRepository domain.FeatureRepository
+	FeatureRepository FeatureRepository
 	Logger            grpclog.LoggerV2
 	DefaultPageNumber uint32
 	DefaultPageSize   uint32
 }
 
 func (s *ListFeaturesService) Call(ctx context.Context, params *ListParams) (*ListResult, error) {
-	filter := &domain.FeatureFilterArgs{
+	filter := &FeatureFilterArgs{
 		Q:       params.Q,
 		Enabled: params.Enabled,
 	}
 
-	features, err := s.FeatureRepository.List(ctx, &domain.FeatureListArgs{
+	features, err := s.FeatureRepository.List(ctx, &FeatureListArgs{
 		Limit:  params.ToLimit(s.DefaultPageSize),
 		Offset: params.ToOffset(s.DefaultPageNumber),
 		Sort:   params.Sort,
@@ -52,7 +51,7 @@ func (s *ListFeaturesService) Call(ctx context.Context, params *ListParams) (*Li
 }
 
 func NewListFeaturesService(
-	FeatureRepository domain.FeatureRepository,
+	FeatureRepository FeatureRepository,
 	Logger grpclog.LoggerV2,
 	DefaultPageNumber uint32,
 	DefaultPageSize uint32,

@@ -1,4 +1,4 @@
-package authentication
+package auth
 
 import (
 	"context"
@@ -11,15 +11,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type AuthenticationService struct {
+type Authentication struct {
 	SecretKey string
 }
 
-func (s *AuthenticationService) CreateToken() (string, error) {
-	return jwt.New(jwt.SigningMethodHS256).SignedString([]byte(s.SecretKey))
-}
-
-func (s *AuthenticationService) GetToken(ctx context.Context) (string, error) {
+func (s *Authentication) GetToken(ctx context.Context) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return "", status.Error(codes.Unauthenticated, "No API Key")
@@ -40,7 +36,7 @@ func (s *AuthenticationService) GetToken(ctx context.Context) (string, error) {
 	return strings.ReplaceAll(bearerToken, "Bearer ", ""), nil
 }
 
-func (s *AuthenticationService) Valid(ctx context.Context) error {
+func (s *Authentication) Valid(ctx context.Context) error {
 	tokenString, err := s.GetToken(ctx)
 	if err != nil {
 		return err
@@ -57,8 +53,8 @@ func (s *AuthenticationService) Valid(ctx context.Context) error {
 	return nil
 }
 
-func NewAuthenticaticationService(secretKey string) Authenticatable {
-	return &AuthenticationService{
+func New(secretKey string) Authenticatable {
+	return &Authentication{
 		SecretKey: secretKey,
 	}
 }
