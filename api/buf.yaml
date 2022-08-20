@@ -1,0 +1,18 @@
+version: v1
+name: buf.build/fikrirnurhidayat/ffgoapis
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/grpc-ecosystem/grpc-gateway
+  - buf.build/envoyproxy/protoc-gen-validate
+lint:
+  use:
+    - DEFAULT
+  ignore:
+    - google/protobuf/timestamp.proto
+    - google/protobuf/datetime.proto
+    - google/protobuf/empty.proto
+    - google/api/annotations.proto
+    - protoc-gen-openapiv2/options/annotations.proto
+breaking:
+  use:
+    - FILE
