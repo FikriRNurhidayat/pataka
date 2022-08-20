@@ -49,3 +49,13 @@ type UpdateResult struct {
 type DeleteParams struct {
 	Name string
 }
+
+type ResultFeatureable interface {
+	GetResult | CreateResult | UpdateResult
+}
+
+func ToFeatureResult[T ResultFeatureable](feature *domain.Feature) *T {
+	return &T{
+		Feature: feature,
+	}
+}

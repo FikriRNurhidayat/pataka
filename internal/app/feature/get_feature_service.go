@@ -2,10 +2,11 @@ package feature
 
 import (
 	"context"
-	"errors"
 
 	"github.com/fikrirnurhidayat/ffgo/internal/domain"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/status"
 )
 
 type Getable interface {
@@ -20,15 +21,15 @@ type GetFeatureService struct {
 func (s *GetFeatureService) Call(ctx context.Context, params *GetParams) (*GetResult, error) {
 	feature, err := s.FeatureRepository.Get(ctx, params.Name)
 	if err != nil {
-		s.Logger.Errorf("[FeatureRepository] failed to retrieve a feature resource: %s", err.Error())
-		return nil, err
+		s.Logger.Error("[get-feature-service] failed to retrieve a feature resource")
+		return nil, status.Error(codes.Internal, "Internal server error")
 	}
 
 	if feature == nil {
-		return nil, errors.New("Feature not found")
+		return nil, status.Error(codes.NotFound, "Feature not found")
 	}
 
-	return &GetResult{feature}, nil
+	return ToFeatureResult[GetResult](feature), nil
 }
 
 func NewGetFeatureService(

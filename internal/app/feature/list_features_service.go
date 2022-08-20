@@ -4,7 +4,9 @@ import (
 	"context"
 
 	"github.com/fikrirnurhidayat/ffgo/internal/domain"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/status"
 )
 
 type Listable interface {
@@ -32,14 +34,14 @@ func (s *ListFeaturesService) Call(ctx context.Context, params *ListParams) (*Li
 	})
 
 	if err != nil {
-		s.Logger.Infof("[FeatureRepository] failed to list feature collection: %v", err.Error())
-		return nil, err
+		s.Logger.Error("[list-features-service] failed to list feature collection")
+		return nil, status.Error(codes.Internal, "Internal server error")
 	}
 
 	featureSize, err := s.FeatureRepository.Size(ctx, filter)
 	if err != nil {
-		s.Logger.Infof("[FeatureRepository] failed to measure feature collection size: %v", err.Error())
-		return nil, err
+		s.Logger.Error("[list-features-service] failed to measure feature collection size")
+		return nil, status.Error(codes.Internal, "Internal server error")
 	}
 
 	return &ListResult{

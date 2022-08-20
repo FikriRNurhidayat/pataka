@@ -2,10 +2,12 @@ package feature
 
 import (
 	"context"
-	"errors"
 
+	"github.com/fikrirnurhidayat/ffgo/internal/app/authentication"
 	"github.com/fikrirnurhidayat/ffgo/internal/domain"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/status"
 )
 
 type Deletable interface {
@@ -13,35 +15,42 @@ type Deletable interface {
 }
 
 type DeleteFeatureService struct {
-	FeatureRepository domain.FeatureRepository
-	Logger            grpclog.LoggerV2
+	AuthenticationService authentication.Authenticatable
+	FeatureRepository     domain.FeatureRepository
+	Logger                grpclog.LoggerV2
 }
 
 func (s *DeleteFeatureService) Call(ctx context.Context, params *DeleteParams) error {
-	feature, err := s.FeatureRepository.Get(ctx, params.Name)
-	if err != nil {
-		s.Logger.Errorf("[FeatureRepository] failed to retrieve a feature resource: %s", err.Error())
+	if err := s.AuthenticationService.Valid(ctx); err != nil {
 		return err
 	}
 
+	feature, err := s.FeatureRepository.Get(ctx, params.Name)
+	if err != nil {
+		s.Logger.Errorf("[FeatureRepository] failed to retrieve a feature resource: %s", err.Error())
+		return status.Error(codes.Internal, "Internal server error")
+	}
+
 	if feature == nil {
-		return errors.New("Feature does not exist")
+		return status.Error(codes.NotFound, "Feature not found")
 	}
 
 	if err := s.FeatureRepository.Delete(ctx, feature.Name); err != nil {
 		s.Logger.Errorf("[FeatureRepository] failed to delete a feature resource: %s", err.Error())
-		return err
+		return status.Error(codes.Internal, "Internal server error")
 	}
 
 	return nil
 }
 
 func NewDeleteFeatureService(
+	AuthenticationService authentication.Authenticatable,
 	FeatureRepository domain.FeatureRepository,
 	Logger grpclog.LoggerV2,
 ) Deletable {
 	return &DeleteFeatureService{
-		FeatureRepository: FeatureRepository,
-		Logger:            Logger,
+		AuthenticationService: AuthenticationService,
+		FeatureRepository:     FeatureRepository,
+		Logger:                Logger,
 	}
 }

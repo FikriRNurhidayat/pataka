@@ -1,4 +1,4 @@
-package repository
+package feature_repository
 
 import (
 	"database/sql"
@@ -80,23 +80,21 @@ func (r *PostgresFeatureRepository) Paginate(limit uint32, offset uint32) (query
 
 // Scan the query result, map it into Feature entity
 func (r *PostgresFeatureRepository) Scan(rows *sql.Rows) (*domain.Feature, error) {
-	feature := domain.Feature{}
-	ea := sql.NullTime{}
+	feature := &domain.Feature{}
 
 	if err := rows.Scan(
 		&feature.Name,
 		&feature.Label,
 		&feature.Enabled,
+		&feature.HasAudience,
+		&feature.HasAudienceGroup,
 		&feature.CreatedAt,
 		&feature.UpdatedAt,
-		&ea,
+		&feature.EnabledAt,
 	); err != nil {
+		r.Logger.Errorf("[PostgresFeatureRepository] failed to scan: %s", err.Error())
 		return nil, err
 	}
 
-	if ea.Valid {
-		feature.EnabledAt = ea.Time
-	}
-
-	return &feature, nil
+	return feature, nil
 }

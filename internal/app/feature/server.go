@@ -1,6 +1,9 @@
 package feature
 
-import "github.com/fikrirnurhidayat/ffgo/gen/proto/go/featureflag/v1"
+import (
+	"github.com/fikrirnurhidayat/ffgo/gen/proto/go/featureflag/v1"
+	"google.golang.org/grpc/grpclog"
+)
 
 type FeatureServer struct {
 	featureflag.UnimplementedFeatureServiceServer
@@ -9,6 +12,7 @@ type FeatureServer struct {
 	Update Updatable
 	Get    Getable
 	List   Listable
+	Logger grpclog.LoggerV2
 }
 
 type FeatureServerOpts func(*FeatureServer)
@@ -50,5 +54,11 @@ func WithGetter(getFunc Getable) FeatureServerOpts {
 func WithLister(listFunc Listable) FeatureServerOpts {
 	return func(fs *FeatureServer) {
 		fs.List = listFunc
+	}
+}
+
+func WithLogger(logger grpclog.LoggerV2) FeatureServerOpts {
+	return func(fs *FeatureServer) {
+		fs.Logger = logger
 	}
 }
