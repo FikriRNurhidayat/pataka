@@ -1,0 +1,428 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Audience Service",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Fikri Rahmat Nurhidayat",
+      "url": "https://mail.google.com",
+      "email": "fikrirnurhidayat@gmail.com"
+    }
+  },
+  "tags": [
+    {
+      "name": "AudienceService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/features/{feature_name}/audiences": {
+      "get": {
+        "summary": "List Audiences",
+        "operationId": "ListAudiences",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListAudiencesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "feature_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page_number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "audience_id",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "AUDIENCE_STATUS_UNSPECIFIED",
+              "AUDIENCE_STATUS_ENABLED",
+              "AUDIENCE_STATUS_DISABLED"
+            ],
+            "default": "AUDIENCE_STATUS_UNSPECIFIED"
+          }
+        ],
+        "tags": [
+          "Audiences"
+        ]
+      },
+      "post": {
+        "summary": "Create Audience",
+        "operationId": "CreateAudience",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateAudienceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "feature_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "audience_id": {
+                  "type": "string"
+                },
+                "enabled": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Audiences"
+        ]
+      }
+    },
+    "/v1/features/{feature_name}/audiences/{audience_id}": {
+      "get": {
+        "summary": "Get Audience",
+        "operationId": "GetAudience",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetAudienceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "feature_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "audience_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Audiences"
+        ]
+      },
+      "delete": {
+        "summary": "Delete Audience",
+        "operationId": "DeleteAudience",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteAudienceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "feature_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "audience_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Audiences"
+        ]
+      },
+      "put": {
+        "summary": "Enable Audience",
+        "operationId": "EnableAudience",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAudienceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "feature_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "audience_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Audiences"
+        ]
+      }
+    },
+    "/v1/features/{feature_name}/audiences:bulk": {
+      "post": {
+        "summary": "Bulk Create Audience",
+        "operationId": "BulkCreateAudience",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateAudienceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "feature_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "audience_id": {
+                  "type": "string"
+                },
+                "enabled": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Audiences"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1Audience": {
+      "type": "object",
+      "properties": {
+        "audience_id": {
+          "type": "string"
+        },
+        "feature_name": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "enabled_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1AudienceStatus": {
+      "type": "string",
+      "enum": [
+        "AUDIENCE_STATUS_UNSPECIFIED",
+        "AUDIENCE_STATUS_ENABLED",
+        "AUDIENCE_STATUS_DISABLED"
+      ],
+      "default": "AUDIENCE_STATUS_UNSPECIFIED"
+    },
+    "v1CreateAudienceResponse": {
+      "type": "object",
+      "properties": {
+        "audience": {
+          "$ref": "#/definitions/v1Audience"
+        }
+      }
+    },
+    "v1DeleteAudienceResponse": {
+      "type": "object"
+    },
+    "v1GetAudienceResponse": {
+      "type": "object",
+      "properties": {
+        "audience": {
+          "$ref": "#/definitions/v1Audience"
+        }
+      }
+    },
+    "v1ListAudiencesResponse": {
+      "type": "object",
+      "properties": {
+        "page_number": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "page_size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "page_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "audiences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Audience"
+          }
+        }
+      }
+    },
+    "v1UpdateAudienceResponse": {
+      "type": "object",
+      "properties": {
+        "audience": {
+          "$ref": "#/definitions/v1Audience"
+        }
+      }
+    }
+  }
+}

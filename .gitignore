@@ -4,5 +4,6 @@
 tmp/
 .ffgo.yaml
 .env
-req.http
+*.http
 vendor
+.vscode

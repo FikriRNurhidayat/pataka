@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package feature.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/fikrirnurhidayat/ffgo/protobuf/feature/v1;featurev1";
+
+message Feature {
+  string name = 1;
+  string label = 2;
+  bool enabled = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp enabled_at = 6;
+}
+
+enum FeatureStatus {
+  FEATURE_STATUS_UNSPECIFIED = 0;
+  FEATURE_STATUS_ENABLED = 1;
+  FEATURE_STATUS_DISABLED = 2;
+}

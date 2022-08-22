@@ -1,10 +1,10 @@
 /*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
+Copyright © 2022 FIKRI RAHMAT NURHIDAYAT <fikrirnurhidayat@gmail.com>
 */
 package cmd
 
 import (
-	"github.com/fikrirnurhidayat/ffgo/internal/server"
+	"github.com/fikrirnurhidayat/ffgo/internal/server/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

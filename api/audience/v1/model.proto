@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package audience.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/fikrirnurhidayat/ffgo/protobuf/audience/v1;audiencev1";
+
+message Audience {
+  string audience_id = 1;
+  string feature_name = 2;
+  bool enabled = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp enabled_at = 6;
+}
+
+message BulkCreateAudience {
+  string audience_id = 1;
+  string feature_name = 2;
+  bool enabled = 3;
+}
+
+enum AudienceStatus {
+  AUDIENCE_STATUS_UNSPECIFIED = 0;
+  AUDIENCE_STATUS_ENABLED = 1;
+  AUDIENCE_STATUS_DISABLED = 2;
+}

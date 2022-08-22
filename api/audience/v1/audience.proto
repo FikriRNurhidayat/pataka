@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package audience.v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "audience/v1/model.proto";
+
+option go_package = "github.com/fikrirnurhidayat/ffgo/protobuf/audience/v1;audiencev1";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Audience Service";
+    version: "1.0.0";
+    contact: {
+      name: "Fikri Rahmat Nurhidayat";
+      url: "https://mail.google.com";
+      email: "fikrirnurhidayat@gmail.com";
+    };
+  };
+};
+
+message BulkCreateAudiencesRequest {
+  repeated BulkCreateAudience audiences = 1;
+}
+
+message BulkCreateAudiencesResponse {
+  repeated Audience audiences = 1;
+}
+
+message CreateAudienceRequest {
+  string audience_id = 1;
+  string feature_name = 2;
+  bool enabled = 3;
+}
+
+message CreateAudienceResponse {
+  Audience audience = 1;
+}
+
+message UpdateAudienceRequest {
+  string audience_id = 1;
+  string feature_name = 2;
+  bool enabled = 3;
+}
+
+message UpdateAudienceResponse {
+  Audience audience = 1;
+}
+
+message DeleteAudienceRequest {
+  string feature_name = 1;
+  string audience_id = 2;
+}
+
+message DeleteAudienceResponse {}
+
+message ListAudiencesRequest {
+  string sort = 1;
+  uint32 page_size = 2;
+  uint32 page_number = 3;
+  string feature_name = 4;
+  repeated string audience_id = 5;
+  AudienceStatus status = 6;
+}
+
+message ListAudiencesResponse {
+  uint32 page_number = 1;
+  uint32 page_size = 2;
+  uint32 page_count = 3;
+  uint32 size = 4;
+  repeated Audience audiences = 5;
+}
+
+message GetAudienceRequest {
+  string feature_name = 1;
+  string audience_id = 2;
+}
+
+message GetAudienceResponse {
+  Audience audience = 1;
+}
+
+service AudienceService {
+  rpc BulkCreateAudiences(CreateAudienceRequest) returns (CreateAudienceResponse) {
+    option (google.api.http) = {
+      post: "/v1/features/{feature_name}/audiences:bulk"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      operation_id: "BulkCreateAudience"
+      summary: "Bulk Create Audience"
+      tags: "Audiences"
+    };
+  }
+
+  rpc CreateAudience(CreateAudienceRequest) returns (CreateAudienceResponse) {
+    option (google.api.http) = {
+      post: "/v1/features/{feature_name}/audiences"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      operation_id: "CreateAudience"
+      summary: "Create Audience"
+      tags: "Audiences"
+    };
+  }
+
+  rpc UpdateAudience(UpdateAudienceRequest) returns (UpdateAudienceResponse) {
+    option (google.api.http) = {
+      put: "/v1/features/{feature_name}/audiences/{audience_id}"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      operation_id: "EnableAudience"
+      summary: "Enable Audience"
+      tags: "Audiences"
+    };
+  }
+
+  rpc DeleteAudience(DeleteAudienceRequest) returns (DeleteAudienceResponse) {
+    option (google.api.http) = {
+      delete: "/v1/features/{feature_name}/audiences/{audience_id}"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      operation_id: "DeleteAudience"
+      summary: "Delete Audience"
+      tags: "Audiences"
+    };
+  }
+
+  rpc ListAudiences(ListAudiencesRequest) returns (ListAudiencesResponse) {
+    option (google.api.http) = {
+      get: "/v1/features/{feature_name}/audiences"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      operation_id: "ListAudiences"
+      summary: "List Audiences"
+      tags: "Audiences"
+    };
+  }
+
+  rpc GetAudience(GetAudienceRequest) returns (GetAudienceResponse) {
+    option (google.api.http) = {
+      get: "/v1/features/{feature_name}/audiences/{audience_id}"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      operation_id: "GetAudience"
+      summary: "Get Audience"
+      tags: "Audiences"
+    };
+  }
+}
