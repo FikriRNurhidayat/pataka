@@ -32,13 +32,13 @@ var SORT_MAP = map[string]string{
 func (r *PostgresFeatureRepository) Get(ctx context.Context, name string) (feature *Feature, err error) {
 	stmt, err := r.PrepareContext(ctx, GET_SQL)
 	if err != nil {
-		r.Logger.Errorf("[PostgresFeatureRepository] failed to prepare get statement: %s", err.Error())
+		r.Logger.Errorf("[postgres-feature-repository] failed to prepare get statement: %s", err.Error())
 		return nil, err
 	}
 
 	rows, err := stmt.QueryContext(ctx, name)
 	if err != nil {
-		r.Logger.Errorf("[PostgresFeatureRepository] failed to run get statement: %s", err.Error())
+		r.Logger.Errorf("[postgres-feature-repository] failed to run get statement: %s", err.Error())
 		return nil, err
 	}
 
@@ -216,7 +216,7 @@ func (r *PostgresFeatureRepository) Size(ctx context.Context, args *FeatureFilte
 	return uint32(count), nil
 }
 
-func NewPostgresFeatureRepository(db DB, Logger grpclog.LoggerV2) FeatureRepository {
+func NewPostgresRepository(db DB, Logger grpclog.LoggerV2) FeatureRepository {
 	r := new(PostgresFeatureRepository)
 
 	r.Logger = Logger

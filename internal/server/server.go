@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/fikrirnurhidayat/ffgo/gen/proto/go/featureflag/v1"
+	featureflagpb "github.com/fikrirnurhidayat/ffgo/gen/proto/go/featureflag/v1"
 	"github.com/fikrirnurhidayat/ffgo/internal/app/feature"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jmoiron/sqlx"
@@ -27,7 +27,7 @@ var (
 	GATEWAY_ENDPOINT string
 	logger           grpclog.LoggerV2
 	db               *sqlx.DB
-	featureServer    featureflag.FeatureServiceServer
+	featureServer    featureflagpb.FeatureServiceServer
 )
 
 func initInfra() {
@@ -60,7 +60,7 @@ func createGateway(ctx context.Context) *http.Server {
 	dialOptions := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
 	// Register feature service handler from endpoint
-	featureflag.RegisterFeatureServiceHandlerFromEndpoint(ctx, mux, GRPC_ENDPOINT, dialOptions)
+	featureflagpb.RegisterFeatureServiceHandlerFromEndpoint(ctx, mux, GRPC_ENDPOINT, dialOptions)
 
 	return &http.Server{
 		Addr:    GATEWAY_ENDPOINT,
@@ -76,7 +76,7 @@ func initServer() {
 }
 
 func registerServer(server *grpc.Server) {
-	featureflag.RegisterFeatureServiceServer(server, featureServer)
+	featureflagpb.RegisterFeatureServiceServer(server, featureServer)
 }
 
 func Serve() {

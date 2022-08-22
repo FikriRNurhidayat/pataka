@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: featureflag/v1/featureflag.proto
+// source: features/v1/features.proto
 
 package featureflagpb
 
@@ -277,5 +277,5 @@ var FeatureService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "featureflag/v1/featureflag.proto",
+	Metadata: "features/v1/features.proto",
 }

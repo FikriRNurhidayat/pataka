@@ -8,7 +8,7 @@ import (
 )
 
 type Server struct {
-	featureflag.UnimplementedFeatureServiceServer
+	featureflagpb.UnimplementedFeatureServiceServer
 	Create Createable
 	Delete Deletable
 	Update Updatable
@@ -20,7 +20,7 @@ type Server struct {
 
 type ServerOpts func(*Server)
 
-func NewServer(opts ...ServerOpts) featureflag.FeatureServiceServer {
+func NewServer(opts ...ServerOpts) featureflagpb.FeatureServiceServer {
 	s := new(Server)
 
 	for _, set := range opts {
@@ -28,7 +28,7 @@ func NewServer(opts ...ServerOpts) featureflag.FeatureServiceServer {
 	}
 
 	authentication := auth.New(viper.GetString("admin.secret"))
-	featureRepository := NewPostgresFeatureRepository(s.DB, s.Logger)
+	featureRepository := NewPostgresRepository(s.DB, s.Logger)
 	s.Create = NewCreateFeatureService(authentication, featureRepository, s.Logger)
 	s.List = NewListFeaturesService(featureRepository, s.Logger, 1, 10)
 	s.Get = NewGetFeatureService(featureRepository, s.Logger)

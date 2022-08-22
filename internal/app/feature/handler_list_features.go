@@ -7,19 +7,19 @@ import (
 	"github.com/fikrirnurhidayat/ffgo/internal/manager"
 )
 
-func (s *Server) ListFeatures(ctx context.Context, req *featureflag.ListFeaturesRequest) (*featureflag.ListFeaturesResponse, error) {
+func (s *Server) ListFeatures(ctx context.Context, req *featureflagpb.ListFeaturesRequest) (*featureflagpb.ListFeaturesResponse, error) {
 	// TODO: Find a better way
 	var (
 		enabled *bool
 		e       bool
 	)
 	switch req.GetStatus() {
-	case featureflag.FeatureStatus_FEATURE_STATUS_UNSPECIFIED:
+	case featureflagpb.FeatureStatus_FEATURE_STATUS_UNSPECIFIED:
 		enabled = nil
-	case featureflag.FeatureStatus_FEATURE_STATUS_ENABLED:
+	case featureflagpb.FeatureStatus_FEATURE_STATUS_ENABLED:
 		e = true
 		enabled = &e
-	case featureflag.FeatureStatus_FEATURE_STATUS_DISABLED:
+	case featureflagpb.FeatureStatus_FEATURE_STATUS_DISABLED:
 		e = false
 		enabled = &e
 	}

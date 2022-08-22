@@ -26,7 +26,7 @@ func (s *DeleteFeatureService) Call(ctx context.Context, params *DeleteParams) e
 
 	feature, err := s.FeatureRepository.Get(ctx, params.Name)
 	if err != nil {
-		s.Logger.Errorf("[FeatureRepository] failed to retrieve a feature resource: %s", err.Error())
+		s.Logger.Errorf("[delete-feature-service] failed to retrieve a feature resource: %s", err.Error())
 		return status.Error(codes.Internal, "Internal server error")
 	}
 
@@ -35,7 +35,7 @@ func (s *DeleteFeatureService) Call(ctx context.Context, params *DeleteParams) e
 	}
 
 	if err := s.FeatureRepository.Delete(ctx, feature.Name); err != nil {
-		s.Logger.Errorf("[FeatureRepository] failed to delete a feature resource: %s", err.Error())
+		s.Logger.Errorf("[delete-feature-service] failed to delete a feature resource: %s", err.Error())
 		return status.Error(codes.Internal, "Internal server error")
 	}
 
