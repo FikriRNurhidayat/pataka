@@ -1,56 +1,56 @@
-package feature
+package domain
 
 import (
 	"github.com/fikrirnurhidayat/ffgo/internal/pkg/pagination"
 )
 
-type CreateParams struct {
+type CreateFeatureParams struct {
 	Name    string
 	Label   string
 	Enabled bool
 }
 
-type CreateResult struct {
+type CreateFeatureResult struct {
 	Feature *Feature
 }
 
-type ListParams struct {
+type ListFeaturesParams struct {
 	*pagination.PaginationParams
 	Sort    string
 	Q       string
 	Enabled *bool
 }
 
-type ListResult struct {
+type ListFeaturesResult struct {
 	*pagination.PaginationResult
 	Size     uint32
 	Features []Feature
 }
 
-type GetParams struct {
+type GetFeatureParams struct {
 	Name string
 }
 
-type GetResult struct {
+type GetFeatureResult struct {
 	Feature *Feature
 }
 
-type UpdateParams struct {
+type UpdateFeatureParams struct {
 	Name    string
 	Label   string
 	Enabled bool
 }
 
-type UpdateResult struct {
+type UpdateFeatureResult struct {
 	Feature *Feature
 }
 
-type DeleteParams struct {
+type DeleteFeatureParams struct {
 	Name string
 }
 
 type FeatureResultable interface {
-	GetResult | CreateResult | UpdateResult
+	GetFeatureResult | CreateFeatureResult | UpdateFeatureResult
 }
 
 func ToFeatureResult[T FeatureResultable](feature *Feature) *T {

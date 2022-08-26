@@ -1,13 +1,17 @@
-package feature
+package domain
 
-import "context"
+import (
+	"context"
+)
 
 type FeatureRepository interface {
 	Save(ctx context.Context, feature *Feature) error
 	Get(ctx context.Context, name string) (*Feature, error)
-	Delete(ctx context.Context, name string) error
+	GetBy(ctx context.Context, args *FeatureFilterArgs) (*Feature, error)
 	List(ctx context.Context, args *FeatureListArgs) ([]Feature, error)
+	Delete(ctx context.Context, name string) error
 	Size(ctx context.Context, args *FeatureFilterArgs) (uint32, error)
+	DeleteBy(ctx context.Context, args *FeatureFilterArgs) error
 }
 
 type FeatureFilterArgs struct {

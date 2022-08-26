@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"strings"
 
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"github.com/fikrirnurhidayat/ffgo/internal/pkg/inspector"
 	"github.com/jmoiron/sqlx"
 )
@@ -11,7 +12,7 @@ import (
 // Build the Filter Statement for List Features
 // It will dynamically append the SQL string
 // based on the argument being passed
-func (r *PostgresAudienceRepository) Filter(filter AudienceFilterArgs) (query string, args []interface{}, err error) {
+func (r *PostgresAudienceRepository) Filter(filter domain.AudienceFilterArgs) (query string, args []interface{}, err error) {
 	queries := []string{}
 
 	if filter.Enabled != nil {
@@ -41,8 +42,8 @@ func (r *PostgresAudienceRepository) Filter(filter AudienceFilterArgs) (query st
 }
 
 // Scan the query result, map it into Audience entity
-func (r *PostgresAudienceRepository) Scan(rows *sql.Rows) (*Audience, error) {
-	audience := &Audience{}
+func (r *PostgresAudienceRepository) Scan(rows *sql.Rows) (*domain.Audience, error) {
+	audience := &domain.Audience{}
 	ea := sql.NullTime{}
 
 	if err := rows.Scan(

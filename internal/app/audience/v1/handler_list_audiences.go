@@ -3,6 +3,7 @@ package audience
 import (
 	"context"
 
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"github.com/fikrirnurhidayat/ffgo/internal/pkg/pagination"
 	audiencev1 "github.com/fikrirnurhidayat/ffgo/protobuf/audience/v1"
 )
@@ -25,7 +26,7 @@ func (s *Server) ListAudiences(ctx context.Context, req *audiencev1.ListAudience
 		enabled = &e
 	}
 
-	result, err := s.List.Call(ctx, &ListParams{
+	result, err := s.listAudiencesService.Call(ctx, &domain.ListAudiencesParams{
 		PaginationParams: &pagination.PaginationParams{
 			PageNumber: req.GetPageNumber(),
 			PageSize:   req.GetPageSize(),
@@ -38,8 +39,6 @@ func (s *Server) ListAudiences(ctx context.Context, req *audiencev1.ListAudience
 	if err != nil {
 		return nil, err
 	}
-
-	s.Logger.Info(result.Audiences)
 
 	return ToAudiencesProtoResponse(result), nil
 }

@@ -3,11 +3,12 @@ package feature
 import (
 	"context"
 
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	featurev1 "github.com/fikrirnurhidayat/ffgo/protobuf/feature/v1"
 )
 
 func (s *Server) DeleteFeature(ctx context.Context, req *featurev1.DeleteFeatureRequest) (*featurev1.DeleteFeatureResponse, error) {
-	err := s.Delete.Call(ctx, &DeleteParams{
+	err := s.deleteFeatureService.Call(ctx, &domain.DeleteFeatureParams{
 		Name: req.GetName(),
 	})
 	if err != nil {

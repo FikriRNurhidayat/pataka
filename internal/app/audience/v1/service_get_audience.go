@@ -3,17 +3,18 @@ package audience
 import (
 	"context"
 
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 )
 
 type GetAudienceService struct {
-	audienceRepository AudienceRepository
+	audienceRepository domain.AudienceRepository
 	logger             grpclog.LoggerV2
 }
 
-func (s *GetAudienceService) Call(ctx context.Context, params *GetParams) (*GetResult, error) {
+func (s *GetAudienceService) Call(ctx context.Context, params *domain.GetAudienceParams) (*domain.GetAudienceResult, error) {
 	audience, err := s.audienceRepository.Get(ctx, params.FeatureName, params.AudienceId)
 	if err != nil {
 		s.logger.Error("[get-audience-service] failed to retrieve a audience resource")
@@ -24,13 +25,13 @@ func (s *GetAudienceService) Call(ctx context.Context, params *GetParams) (*GetR
 		return nil, status.Error(codes.NotFound, "Audience not found")
 	}
 
-	return ToAudienceResult[GetResult](audience), nil
+	return domain.ToAudienceResult[domain.GetAudienceResult](audience), nil
 }
 
 func NewGetAudienceService(
-	audienceRepository AudienceRepository,
+	audienceRepository domain.AudienceRepository,
 	logger grpclog.LoggerV2,
-) Getable {
+) domain.AudienceGetable {
 	return &GetAudienceService{
 		audienceRepository: audienceRepository,
 		logger:             logger,

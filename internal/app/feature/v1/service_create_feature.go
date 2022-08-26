@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/fikrirnurhidayat/ffgo/internal/auth"
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
@@ -12,11 +13,11 @@ import (
 
 type CreateFeatureService struct {
 	authentication    auth.Authenticatable
-	featureRepository FeatureRepository
+	featureRepository domain.FeatureRepository
 	logger            grpclog.LoggerV2
 }
 
-func (s *CreateFeatureService) Call(ctx context.Context, params *CreateParams) (*CreateResult, error) {
+func (s *CreateFeatureService) Call(ctx context.Context, params *domain.CreateFeatureParams) (*domain.CreateFeatureResult, error) {
 	if err := s.authentication.Valid(ctx); err != nil {
 		return nil, err
 	}
@@ -31,7 +32,7 @@ func (s *CreateFeatureService) Call(ctx context.Context, params *CreateParams) (
 		return nil, status.Error(codes.InvalidArgument, "Feature already exists")
 	}
 
-	feature = &Feature{
+	feature = &domain.Feature{
 		Name:             params.Name,
 		Label:            params.Label,
 		Enabled:          params.Enabled,
@@ -51,14 +52,14 @@ func (s *CreateFeatureService) Call(ctx context.Context, params *CreateParams) (
 		return nil, status.Error(codes.Internal, "Internal server error")
 	}
 
-	return ToFeatureResult[CreateResult](feature), nil
+	return domain.ToFeatureResult[domain.CreateFeatureResult](feature), nil
 }
 
 func NewCreateFeatureService(
 	authentication auth.Authenticatable,
-	featureRepository FeatureRepository,
+	featureRepository domain.FeatureRepository,
 	logger grpclog.LoggerV2,
-) Createable {
+) domain.FeatureCreateable {
 	return &CreateFeatureService{
 		authentication:    authentication,
 		featureRepository: featureRepository,

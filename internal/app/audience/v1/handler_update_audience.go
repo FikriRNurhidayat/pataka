@@ -3,11 +3,12 @@ package audience
 import (
 	"context"
 
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	audiencev1 "github.com/fikrirnurhidayat/ffgo/protobuf/audience/v1"
 )
 
 func (s *Server) UpdateAudience(ctx context.Context, req *audiencev1.UpdateAudienceRequest) (*audiencev1.UpdateAudienceResponse, error) {
-	result, err := s.Update.Call(ctx, &UpdateParams{
+	result, err := s.updateAudienceService.Call(ctx, &domain.UpdateAudienceParams{
 		AudienceId:  req.GetAudienceId(),
 		FeatureName: req.GetFeatureName(),
 		Enabled:     req.GetEnabled(),

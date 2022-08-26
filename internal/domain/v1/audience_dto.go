@@ -1,37 +1,37 @@
-package audience
+package domain
 
 import (
 	"github.com/fikrirnurhidayat/ffgo/internal/pkg/pagination"
 )
 
-type BulkCreateParams struct {
-	Audiences []CreateParams
+type BulkCreateAudiencesAudienceParams struct {
+	Audiences []CreateAudienceParams
 }
 
-type BulkCreateResult struct {
+type BulkCreateAudiencesAudienceResult struct {
 	Audiences []Audience
 }
 
-type CreateParams struct {
+type CreateAudienceParams struct {
 	AudienceId  string
 	FeatureName string
 	Enabled     bool
 }
 
-type CreateResult struct {
+type CreateAudienceResult struct {
 	Audience *Audience
 }
 
-type GetParams struct {
+type GetAudienceParams struct {
 	AudienceId  string
 	FeatureName string
 }
 
-type GetResult struct {
+type GetAudienceResult struct {
 	Audience *Audience
 }
 
-type ListParams struct {
+type ListAudiencesParams struct {
 	*pagination.PaginationParams
 	Sort        string
 	FeatureName string
@@ -39,29 +39,29 @@ type ListParams struct {
 	Enabled     *bool
 }
 
-type ListResult struct {
+type ListAudiencesResult struct {
 	*pagination.PaginationResult
 	Size      uint32
 	Audiences []Audience
 }
 
-type UpdateParams struct {
+type UpdateAudienceParams struct {
 	AudienceId  string
 	FeatureName string
 	Enabled     bool
 }
 
-type UpdateResult struct {
+type UpdateAudienceResult struct {
 	Audience *Audience
 }
 
-type DeleteParams struct {
+type DeleteAudienceParams struct {
 	AudienceId  string
 	FeatureName string
 }
 
 type AudienceResultable interface {
-	GetResult | CreateResult | UpdateResult
+	GetAudienceResult | CreateAudienceResult | UpdateAudienceResult
 }
 
 func ToAudienceResult[T AudienceResultable](audience *Audience) *T {

@@ -1,6 +1,7 @@
 package feature
 
 import (
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	featurev1 "github.com/fikrirnurhidayat/ffgo/protobuf/feature/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -9,7 +10,7 @@ type ProtoFeatureable interface {
 	featurev1.GetFeatureResponse | featurev1.UpdateFeatureResponse | featurev1.CreateFeatureResponse
 }
 
-func ToFeaturesProtoResponse(result *ListResult) *featurev1.ListFeaturesResponse {
+func ToFeaturesProtoResponse(result *domain.ListFeaturesResult) *featurev1.ListFeaturesResponse {
 	res := &featurev1.ListFeaturesResponse{
 		PageNumber: result.PageNumber,
 		PageSize:   result.PageSize,
@@ -24,13 +25,13 @@ func ToFeaturesProtoResponse(result *ListResult) *featurev1.ListFeaturesResponse
 	return res
 }
 
-func ToFeatureProtoResponse[T ProtoFeatureable](feature *Feature) *T {
+func ToFeatureProtoResponse[T ProtoFeatureable](feature *domain.Feature) *T {
 	return &T{
 		Feature: ToFeatureProto(feature),
 	}
 }
 
-func ToFeatureProto(feature *Feature) *featurev1.Feature {
+func ToFeatureProto(feature *domain.Feature) *featurev1.Feature {
 	res := &featurev1.Feature{
 		Name:      feature.Name,
 		Label:     feature.Label,

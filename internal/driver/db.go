@@ -1,4 +1,4 @@
-package databasesql
+package driver
 
 import "github.com/jmoiron/sqlx"
 

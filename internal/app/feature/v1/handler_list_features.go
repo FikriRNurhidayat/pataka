@@ -3,6 +3,7 @@ package feature
 import (
 	"context"
 
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"github.com/fikrirnurhidayat/ffgo/internal/pkg/pagination"
 	featurev1 "github.com/fikrirnurhidayat/ffgo/protobuf/feature/v1"
 )
@@ -24,7 +25,7 @@ func (s *Server) ListFeatures(ctx context.Context, req *featurev1.ListFeaturesRe
 		enabled = &e
 	}
 
-	result, err := s.List.Call(ctx, &ListParams{
+	result, err := s.listFeaturesService.Call(ctx, &domain.ListFeaturesParams{
 		PaginationParams: &pagination.PaginationParams{
 			PageNumber: req.GetPageNumber(),
 			PageSize:   req.GetPageSize(),

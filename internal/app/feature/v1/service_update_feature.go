@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/fikrirnurhidayat/ffgo/internal/auth"
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
@@ -12,11 +13,11 @@ import (
 
 type UpdateFeatureService struct {
 	authentication    auth.Authenticatable
-	featureRepository FeatureRepository
+	featureRepository domain.FeatureRepository
 	logger            grpclog.LoggerV2
 }
 
-func (s *UpdateFeatureService) Call(ctx context.Context, params *UpdateParams) (*UpdateResult, error) {
+func (s *UpdateFeatureService) Call(ctx context.Context, params *domain.UpdateFeatureParams) (*domain.UpdateFeatureResult, error) {
 	if err := s.authentication.Valid(ctx); err != nil {
 		return nil, err
 	}
@@ -51,14 +52,14 @@ func (s *UpdateFeatureService) Call(ctx context.Context, params *UpdateParams) (
 		return nil, status.Error(codes.Internal, "Internal server error")
 	}
 
-	return ToFeatureResult[UpdateResult](feature), nil
+	return domain.ToFeatureResult[domain.UpdateFeatureResult](feature), nil
 }
 
 func NewUpdateFeatureService(
 	authentication auth.Authenticatable,
-	featureRepository FeatureRepository,
+	featureRepository domain.FeatureRepository,
 	logger grpclog.LoggerV2,
-) Updatable {
+) domain.FeatureUpdatable {
 	return &UpdateFeatureService{
 		authentication:    authentication,
 		featureRepository: featureRepository,

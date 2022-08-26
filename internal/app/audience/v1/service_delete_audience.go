@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/fikrirnurhidayat/ffgo/internal/auth"
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
@@ -11,18 +12,18 @@ import (
 
 type DeleteAudienceService struct {
 	authentication     auth.Authenticatable
-	audienceRepository AudienceRepository
+	audienceRepository domain.AudienceRepository
 	logger             grpclog.LoggerV2
 }
 
-func (s *DeleteAudienceService) Call(ctx context.Context, params *DeleteParams) error {
+func (s *DeleteAudienceService) Call(ctx context.Context, params *domain.DeleteAudienceParams) error {
 	if err := s.authentication.Valid(ctx); err != nil {
 		return err
 	}
 
 	audience, err := s.audienceRepository.Get(ctx, params.FeatureName, params.AudienceId)
 	if err != nil {
-		s.logger.Errorf("[delete-audience-service] failed to retrieve a audience resource: %s", err.Error())
+		s.logger.Error("[delete-audience-service] failed to retrieve a audience on repository")
 		return status.Error(codes.Internal, "Internal server error")
 	}
 
@@ -31,7 +32,7 @@ func (s *DeleteAudienceService) Call(ctx context.Context, params *DeleteParams) 
 	}
 
 	if err := s.audienceRepository.Delete(ctx, audience); err != nil {
-		s.logger.Errorf("[delete-audience-service] failed to delete a audience resource: %s", err.Error())
+		s.logger.Error("[delete-audience-service] failed to delete a audience on repository")
 		return status.Error(codes.Internal, "Internal server error")
 	}
 
@@ -40,9 +41,9 @@ func (s *DeleteAudienceService) Call(ctx context.Context, params *DeleteParams) 
 
 func NewDeleteAudienceService(
 	authentication auth.Authenticatable,
-	audienceRepository AudienceRepository,
+	audienceRepository domain.AudienceRepository,
 	logger grpclog.LoggerV2,
-) Deletable {
+) domain.AudienceDeletable {
 	return &DeleteAudienceService{
 		authentication:     authentication,
 		audienceRepository: audienceRepository,

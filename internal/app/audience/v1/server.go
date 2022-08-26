@@ -1,8 +1,10 @@
 package audience
 
 import (
+	"github.com/fikrirnurhidayat/ffgo/internal/app/feature/v1"
 	"github.com/fikrirnurhidayat/ffgo/internal/auth"
-	"github.com/fikrirnurhidayat/ffgo/internal/driver/databasesql"
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
+	"github.com/fikrirnurhidayat/ffgo/internal/driver"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc/grpclog"
 
@@ -11,14 +13,14 @@ import (
 
 type Server struct {
 	audiencev1.UnimplementedAudienceServiceServer
-	BulkCreate BulkCreateable
-	Create     Createable
-	Delete     Deletable
-	Update     Updatable
-	Get        Getable
-	List       Listable
-	Logger     grpclog.LoggerV2
-	DB         databasesql.DB
+	bulkCreateAudiencesService domain.AudienceBulkCreatable
+	createAudienceService      domain.AudienceCreatable
+	deleteAudienceService      domain.AudienceDeletable
+	updateAudienceService      domain.AudienceUpdateable
+	getAudienceService         domain.AudienceGetable
+	listAudiencesService       domain.AudienceListable
+	logger                     grpclog.LoggerV2
+	db                         driver.DB
 }
 
 type ServerOpts func(*Server)
@@ -31,24 +33,25 @@ func NewServer(opts ...ServerOpts) audiencev1.AudienceServiceServer {
 	}
 
 	authentication := auth.New(viper.GetString("admin.secret"))
-	audienceRepository := NewPostgresRepository(s.DB, s.Logger)
-	s.Create = NewCreateAudienceService(authentication, audienceRepository, s.Logger)
-	s.List = NewListAudiencesService(audienceRepository, s.Logger, 1, 10)
-	s.Get = NewGetAudienceService(audienceRepository, s.Logger)
-	s.Update = NewUpdateAudienceService(authentication, audienceRepository, s.Logger)
-	s.Delete = NewDeleteAudienceService(authentication, audienceRepository, s.Logger)
+	audienceRepository := NewPostgresRepository(s.db, s.logger)
+	featureRepository := feature.NewPostgresRepository(s.db, s.logger)
+	s.createAudienceService = NewCreateAudienceService(authentication, audienceRepository, featureRepository, s.logger)
+	s.listAudiencesService = NewListAudiencesService(audienceRepository, s.logger, 1, 10)
+	s.getAudienceService = NewGetAudienceService(audienceRepository, s.logger)
+	s.updateAudienceService = NewUpdateAudienceService(authentication, audienceRepository, s.logger)
+	s.deleteAudienceService = NewDeleteAudienceService(authentication, audienceRepository, s.logger)
 
 	return s
 }
 
 func WithLogger(logger grpclog.LoggerV2) ServerOpts {
 	return func(fs *Server) {
-		fs.Logger = logger
+		fs.logger = logger
 	}
 }
 
-func WithDB(db databasesql.DB) ServerOpts {
+func WithDB(db driver.DB) ServerOpts {
 	return func(fs *Server) {
-		fs.DB = db
+		fs.db = db
 	}
 }

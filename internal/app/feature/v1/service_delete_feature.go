@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/fikrirnurhidayat/ffgo/internal/auth"
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
@@ -11,11 +12,11 @@ import (
 
 type DeleteFeatureService struct {
 	authentication    auth.Authenticatable
-	featureRepository FeatureRepository
+	featureRepository domain.FeatureRepository
 	logger            grpclog.LoggerV2
 }
 
-func (s *DeleteFeatureService) Call(ctx context.Context, params *DeleteParams) error {
+func (s *DeleteFeatureService) Call(ctx context.Context, params *domain.DeleteFeatureParams) error {
 	if err := s.authentication.Valid(ctx); err != nil {
 		return err
 	}
@@ -40,9 +41,9 @@ func (s *DeleteFeatureService) Call(ctx context.Context, params *DeleteParams) e
 
 func NewDeleteFeatureService(
 	authentication auth.Authenticatable,
-	featureRepository FeatureRepository,
+	featureRepository domain.FeatureRepository,
 	logger grpclog.LoggerV2,
-) Deletable {
+) domain.FeatureDeletable {
 	return &DeleteFeatureService{
 		authentication:    authentication,
 		featureRepository: featureRepository,

@@ -3,25 +3,26 @@ package feature
 import (
 	"context"
 
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 )
 
 type ListFeaturesService struct {
-	featureRepository FeatureRepository
+	featureRepository domain.FeatureRepository
 	logger            grpclog.LoggerV2
 	defaultPageNumber uint32
 	defaultPageSize   uint32
 }
 
-func (s *ListFeaturesService) Call(ctx context.Context, params *ListParams) (*ListResult, error) {
-	filter := &FeatureFilterArgs{
+func (s *ListFeaturesService) Call(ctx context.Context, params *domain.ListFeaturesParams) (*domain.ListFeaturesResult, error) {
+	filter := &domain.FeatureFilterArgs{
 		Q:       params.Q,
 		Enabled: params.Enabled,
 	}
 
-	features, err := s.featureRepository.List(ctx, &FeatureListArgs{
+	features, err := s.featureRepository.List(ctx, &domain.FeatureListArgs{
 		Limit:  params.ToLimit(s.defaultPageSize),
 		Offset: params.ToOffset(s.defaultPageNumber),
 		Sort:   params.Sort,
@@ -39,7 +40,7 @@ func (s *ListFeaturesService) Call(ctx context.Context, params *ListParams) (*Li
 		return nil, status.Error(codes.Internal, "Internal server error")
 	}
 
-	return &ListResult{
+	return &domain.ListFeaturesResult{
 		PaginationResult: params.ToPaginationResult(featureSize),
 		Size:             featureSize,
 		Features:         features,
@@ -47,11 +48,11 @@ func (s *ListFeaturesService) Call(ctx context.Context, params *ListParams) (*Li
 }
 
 func NewListFeaturesService(
-	featureRepository FeatureRepository,
+	featureRepository domain.FeatureRepository,
 	logger grpclog.LoggerV2,
 	defaultPageNumber uint32,
 	defaultPageSize uint32,
-) Listable {
+) domain.FeaturesListable {
 	return &ListFeaturesService{
 		featureRepository: featureRepository,
 		logger:            logger,

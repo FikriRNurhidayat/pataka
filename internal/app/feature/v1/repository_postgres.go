@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fikrirnurhidayat/ffgo/internal/driver/databasesql"
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
+	"github.com/fikrirnurhidayat/ffgo/internal/driver"
 	"github.com/fikrirnurhidayat/ffgo/internal/pkg/inspector"
 	"github.com/fikrirnurhidayat/ffgo/internal/pkg/queryhelper"
 	"google.golang.org/grpc/grpclog"
@@ -12,7 +13,17 @@ import (
 
 type PostgresFeatureRepository struct {
 	Logger grpclog.LoggerV2
-	databasesql.DB
+	driver.DB
+}
+
+// DeleteBy implements domain.FeatureRepository
+func (*PostgresFeatureRepository) DeleteBy(ctx context.Context, args *domain.FeatureFilterArgs) error {
+	panic("unimplemented")
+}
+
+// GetBy implements domain.FeatureRepository
+func (*PostgresFeatureRepository) GetBy(ctx context.Context, args *domain.FeatureFilterArgs) (*domain.Feature, error) {
+	panic("unimplemented")
 }
 
 var SORT_MAP = map[string]string{
@@ -26,7 +37,7 @@ var SORT_MAP = map[string]string{
 	"enabled_at":         "features.enabled_at",
 }
 
-func (r *PostgresFeatureRepository) Get(ctx context.Context, name string) (feature *Feature, err error) {
+func (r *PostgresFeatureRepository) Get(ctx context.Context, name string) (feature *domain.Feature, err error) {
 	stmt, err := r.PrepareContext(ctx, GET_SQL)
 	if err != nil {
 		r.Logger.Errorf("[postgres-feature-repository] failed to prepare get statement: %s", err.Error())
@@ -50,7 +61,7 @@ func (r *PostgresFeatureRepository) Get(ctx context.Context, name string) (featu
 	return feature, nil
 }
 
-func (r *PostgresFeatureRepository) List(ctx context.Context, args *FeatureListArgs) (features []Feature, err error) {
+func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.FeatureListArgs) (features []domain.Feature, err error) {
 	var (
 		query string = LIST_SQL
 		qargs []interface{}
@@ -97,7 +108,7 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *FeatureListA
 		return features, err
 	}
 
-	features = []Feature{}
+	features = []domain.Feature{}
 
 	for rows.Next() {
 		feature, err := r.Scan(rows)
@@ -111,7 +122,7 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *FeatureListA
 	return features, nil
 }
 
-func (r *PostgresFeatureRepository) Save(ctx context.Context, feature *Feature) error {
+func (r *PostgresFeatureRepository) Save(ctx context.Context, feature *domain.Feature) error {
 	query := SAVE_SQL
 
 	args := map[string]interface{}{
@@ -167,7 +178,7 @@ func (r *PostgresFeatureRepository) Delete(ctx context.Context, name string) err
 	return nil
 }
 
-func (r *PostgresFeatureRepository) Size(ctx context.Context, args *FeatureFilterArgs) (uint32, error) {
+func (r *PostgresFeatureRepository) Size(ctx context.Context, args *domain.FeatureFilterArgs) (uint32, error) {
 	var (
 		query string = SIZE_SQL
 		qargs []interface{}
@@ -213,7 +224,7 @@ func (r *PostgresFeatureRepository) Size(ctx context.Context, args *FeatureFilte
 	return uint32(count), nil
 }
 
-func NewPostgresRepository(db databasesql.DB, Logger grpclog.LoggerV2) FeatureRepository {
+func NewPostgresRepository(db driver.DB, Logger grpclog.LoggerV2) domain.FeatureRepository {
 	r := new(PostgresFeatureRepository)
 
 	r.Logger = Logger

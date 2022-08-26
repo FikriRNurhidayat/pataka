@@ -1,15 +1,17 @@
 package audience
 
 import (
-	audiencev1 "github.com/fikrirnurhidayat/ffgo/protobuf/audience/v1"
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	audiencev1 "github.com/fikrirnurhidayat/ffgo/protobuf/audience/v1"
 )
 
 type AudienceProtoable interface {
 	audiencev1.GetAudienceResponse | audiencev1.UpdateAudienceResponse | audiencev1.CreateAudienceResponse
 }
 
-func ToAudiencesProtoResponse(result *ListResult) *audiencev1.ListAudiencesResponse {
+func ToAudiencesProtoResponse(result *domain.ListAudiencesResult) *audiencev1.ListAudiencesResponse {
 	res := &audiencev1.ListAudiencesResponse{
 		PageNumber: result.PageNumber,
 		PageSize:   result.PageSize,
@@ -24,13 +26,13 @@ func ToAudiencesProtoResponse(result *ListResult) *audiencev1.ListAudiencesRespo
 	return res
 }
 
-func ToAudienceProtoResponse[T AudienceProtoable](audience *Audience) *T {
+func ToAudienceProtoResponse[T AudienceProtoable](audience *domain.Audience) *T {
 	return &T{
 		Audience: ToAudienceProto(audience),
 	}
 }
 
-func ToAudienceProto(audience *Audience) *audiencev1.Audience {
+func ToAudienceProto(audience *domain.Audience) *audiencev1.Audience {
 	res := &audiencev1.Audience{
 		AudienceId:  audience.AudienceId,
 		FeatureName: audience.FeatureName,

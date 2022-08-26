@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fikrirnurhidayat/ffgo/internal/driver/databasesql"
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
+	"github.com/fikrirnurhidayat/ffgo/internal/driver"
 	"github.com/fikrirnurhidayat/ffgo/internal/pkg/inspector"
 	"github.com/fikrirnurhidayat/ffgo/internal/pkg/queryhelper"
 	"google.golang.org/grpc/grpclog"
@@ -14,7 +15,17 @@ import (
 
 type PostgresAudienceRepository struct {
 	logger grpclog.LoggerV2
-	databasesql.DB
+	driver.DB
+}
+
+// DeleteBy implements domain.AudienceRepository
+func (*PostgresAudienceRepository) DeleteBy(ctx context.Context, args *domain.AudienceFilterArgs) error {
+	panic("unimplemented")
+}
+
+// GetBy implements domain.AudienceRepository
+func (*PostgresAudienceRepository) GetBy(ctx context.Context, args *domain.AudienceFilterArgs) (*domain.Audience, error) {
+	panic("unimplemented")
 }
 
 var SORT_MAP = map[string]string{
@@ -25,7 +36,7 @@ var SORT_MAP = map[string]string{
 	"updated_at":   "audiences.updated_at",
 }
 
-func (r *PostgresAudienceRepository) Get(ctx context.Context, fn string, ui string) (audience *Audience, err error) {
+func (r *PostgresAudienceRepository) Get(ctx context.Context, fn string, ui string) (audience *domain.Audience, err error) {
 	stmt, err := r.PrepareContext(ctx, GET_SQL)
 	if err != nil {
 		r.logger.Errorf("[postgres-audience-repository] failed to prepare get statement: %s", err.Error())
@@ -49,7 +60,7 @@ func (r *PostgresAudienceRepository) Get(ctx context.Context, fn string, ui stri
 	return audience, nil
 }
 
-func (r *PostgresAudienceRepository) List(ctx context.Context, args *AudienceListArgs) (audiences []Audience, err error) {
+func (r *PostgresAudienceRepository) List(ctx context.Context, args *domain.AudienceListArgs) (audiences []domain.Audience, err error) {
 	var (
 		query string = LIST_SQL
 		qargs []interface{}
@@ -99,7 +110,7 @@ func (r *PostgresAudienceRepository) List(ctx context.Context, args *AudienceLis
 		return audiences, err
 	}
 
-	audiences = []Audience{}
+	audiences = []domain.Audience{}
 
 	for rows.Next() {
 		audience, err := r.Scan(rows)
@@ -113,7 +124,7 @@ func (r *PostgresAudienceRepository) List(ctx context.Context, args *AudienceLis
 	return audiences, nil
 }
 
-func (r *PostgresAudienceRepository) Size(ctx context.Context, args *AudienceFilterArgs) (uint32, error) {
+func (r *PostgresAudienceRepository) Size(ctx context.Context, args *domain.AudienceFilterArgs) (uint32, error) {
 	var (
 		query string = SIZE_SQL
 		qargs []interface{}
@@ -159,7 +170,7 @@ func (r *PostgresAudienceRepository) Size(ctx context.Context, args *AudienceFil
 	return uint32(count), nil
 }
 
-func (r *PostgresAudienceRepository) Delete(ctx context.Context, aud *Audience) error {
+func (r *PostgresAudienceRepository) Delete(ctx context.Context, aud *domain.Audience) error {
 	stmt, err := r.PrepareContext(ctx, DELETE_SQL)
 	if err != nil {
 		r.logger.Errorf("[postgres-audience-repository] failed to prepare delete statement: %s", err.Error())
@@ -175,7 +186,7 @@ func (r *PostgresAudienceRepository) Delete(ctx context.Context, aud *Audience) 
 	return nil
 }
 
-func (r *PostgresAudienceRepository) Save(ctx context.Context, audience *Audience) error {
+func (r *PostgresAudienceRepository) Save(ctx context.Context, audience *domain.Audience) error {
 	query := SAVE_SQL
 
 	args := map[string]interface{}{
@@ -220,7 +231,7 @@ func (r *PostgresAudienceRepository) Save(ctx context.Context, audience *Audienc
 	return nil
 }
 
-func NewPostgresRepository(db databasesql.DB, Logger grpclog.LoggerV2) AudienceRepository {
+func NewPostgresRepository(db driver.DB, Logger grpclog.LoggerV2) domain.AudienceRepository {
 	r := new(PostgresAudienceRepository)
 
 	r.logger = Logger

@@ -1,4 +1,4 @@
-package audience
+package domain
 
 import (
 	"time"

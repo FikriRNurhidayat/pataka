@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"github.com/jmoiron/sqlx"
 )
 
 // Build the Filter Statement for List Features
 // It will dynamically append the SQL string
 // based on the argument being passed
-func (r *PostgresFeatureRepository) Filter(filter FeatureFilterArgs) (query string, args []interface{}, err error) {
+func (r *PostgresFeatureRepository) Filter(filter domain.FeatureFilterArgs) (query string, args []interface{}, err error) {
 	queries := []string{}
 
 	if filter.Q != "" {
@@ -41,8 +42,8 @@ func (r *PostgresFeatureRepository) Filter(filter FeatureFilterArgs) (query stri
 }
 
 // Scan the query result, map it into Feature entity
-func (r *PostgresFeatureRepository) Scan(rows *sql.Rows) (*Feature, error) {
-	feature := &Feature{}
+func (r *PostgresFeatureRepository) Scan(rows *sql.Rows) (*domain.Feature, error) {
+	feature := &domain.Feature{}
 	ea := sql.NullTime{}
 
 	if err := rows.Scan(
