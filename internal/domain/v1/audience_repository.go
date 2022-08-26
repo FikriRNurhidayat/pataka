@@ -6,7 +6,7 @@ import (
 
 type AudienceRepository interface {
 	Get(ctx context.Context, fn string, ui string) (*Audience, error)
-	GetBy(ctx context.Context, args *AudienceFilterArgs) (*Audience, error)
+	GetBy(ctx context.Context, args *AudienceGetByArgs) (*Audience, error)
 	List(context.Context, *AudienceListArgs) ([]Audience, error)
 	Size(context.Context, *AudienceFilterArgs) (uint32, error)
 	Save(context.Context, *Audience) error
@@ -18,6 +18,11 @@ type AudienceFilterArgs struct {
 	FeatureName string   `db:"feature_name"`
 	AudienceIds []string `db:"audience_id"`
 	Enabled     *bool    `db:"enabled"`
+}
+
+type AudienceGetByArgs struct {
+	Sort   string
+	Filter *AudienceFilterArgs
 }
 
 type AudienceListArgs struct {

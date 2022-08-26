@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/fikrirnurhidayat/ffgo/internal/app/audience/v1"
 	"github.com/fikrirnurhidayat/ffgo/internal/app/feature/v1"
+	"github.com/fikrirnurhidayat/ffgo/internal/app/transaction"
 
 	audiencev1 "github.com/fikrirnurhidayat/ffgo/protobuf/audience/v1"
 	featurev1 "github.com/fikrirnurhidayat/ffgo/protobuf/feature/v1"
@@ -15,15 +16,22 @@ var (
 
 func bootstrapServers() {
 	featureRepository := feature.NewPostgresRepository(db, logger)
+	audienceRepository := audience.NewPostgresRepository(db, logger)
+
+	tx := transaction.New(db, logger, &transaction.RepositoryFactory{
+		FeatureRepository:  feature.NewPostgresRepository,
+		AudienceRepository: audience.NewPostgresRepository,
+	})
+
 	featureServer = feature.NewServer(
 		feature.WithLogger(logger),
+		feature.WithUnitOfWork(tx),
 		feature.WithFeatureRepository(featureRepository),
 	)
 
-	audienceRepository := audience.NewPostgresRepository(db, logger)
 	audienceServer = audience.NewServer(
 		audience.WithAudienceRepository(audienceRepository),
-		audience.WithFeatureRepository(featureRepository),
+		audience.WithUnitOfWork(tx),
 		audience.WithLogger(logger),
 	)
 }

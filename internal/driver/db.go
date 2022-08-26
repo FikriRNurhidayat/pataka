@@ -1,8 +1,36 @@
 package driver
 
-import "github.com/jmoiron/sqlx"
+import (
+	"context"
+	"database/sql"
 
+	"github.com/jmoiron/sqlx"
+	"google.golang.org/grpc/grpclog"
+)
+
+// Stolen from https://github.com/jmoiron/sqlx/pull/809
 type DB interface {
-	sqlx.ExtContext
+	sqlx.Ext
+	sqlx.ExecerContext
 	sqlx.PreparerContext
+	sqlx.QueryerContext
+	sqlx.Preparer
+
+	GetContext(context.Context, interface{}, string, ...interface{}) error
+	SelectContext(context.Context, interface{}, string, ...interface{}) error
+	Get(interface{}, string, ...interface{}) error
+	MustExecContext(context.Context, string, ...interface{}) sql.Result
+	PreparexContext(context.Context, string) (*sqlx.Stmt, error)
+	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
+	Select(interface{}, string, ...interface{}) error
+	QueryRow(string, ...interface{}) *sql.Row
+	PrepareNamedContext(context.Context, string) (*sqlx.NamedStmt, error)
+	PrepareNamed(string) (*sqlx.NamedStmt, error)
+	Preparex(string) (*sqlx.Stmt, error)
+	NamedExec(string, interface{}) (sql.Result, error)
+	NamedExecContext(context.Context, string, interface{}) (sql.Result, error)
+	MustExec(string, ...interface{}) sql.Result
+	NamedQuery(string, interface{}) (*sqlx.Rows, error)
 }
+
+type Factory[T any] func(DB, grpclog.LoggerV2) T

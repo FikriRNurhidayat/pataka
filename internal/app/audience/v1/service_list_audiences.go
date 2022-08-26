@@ -12,8 +12,7 @@ import (
 type ListAudiencesService struct {
 	audienceRepository domain.AudienceRepository
 	logger             grpclog.LoggerV2
-	defaultPageNumber  uint32
-	defaultPageSize    uint32
+	pageSize           uint32
 }
 
 func (s *ListAudiencesService) Call(ctx context.Context, params *domain.ListAudiencesParams) (*domain.ListAudiencesResult, error) {
@@ -24,8 +23,8 @@ func (s *ListAudiencesService) Call(ctx context.Context, params *domain.ListAudi
 	}
 
 	audiences, err := s.audienceRepository.List(ctx, &domain.AudienceListArgs{
-		Limit:  params.ToLimit(s.defaultPageSize),
-		Offset: params.ToOffset(s.defaultPageNumber),
+		Limit:  params.GetLimit(),
+		Offset: params.GetOffset(),
 		Sort:   params.Sort,
 		Filter: filter,
 	})
@@ -42,7 +41,7 @@ func (s *ListAudiencesService) Call(ctx context.Context, params *domain.ListAudi
 	}
 
 	return &domain.ListAudiencesResult{
-		PaginationResult: params.ToPaginationResult(audienceSize),
+		PaginationResult: params.PaginationResult(audienceSize),
 		Size:             audienceSize,
 		Audiences:        audiences,
 	}, nil
@@ -51,13 +50,9 @@ func (s *ListAudiencesService) Call(ctx context.Context, params *domain.ListAudi
 func NewListAudiencesService(
 	audienceRepository domain.AudienceRepository,
 	logger grpclog.LoggerV2,
-	defaultPageNumber uint32,
-	defaultPageSize uint32,
 ) domain.AudienceListable {
 	return &ListAudiencesService{
 		audienceRepository: audienceRepository,
 		logger:             logger,
-		defaultPageNumber:  defaultPageNumber,
-		defaultPageSize:    defaultPageSize,
 	}
 }

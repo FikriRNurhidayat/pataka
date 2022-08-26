@@ -12,8 +12,6 @@ import (
 type ListFeaturesService struct {
 	featureRepository domain.FeatureRepository
 	logger            grpclog.LoggerV2
-	defaultPageNumber uint32
-	defaultPageSize   uint32
 }
 
 func (s *ListFeaturesService) Call(ctx context.Context, params *domain.ListFeaturesParams) (*domain.ListFeaturesResult, error) {
@@ -23,8 +21,8 @@ func (s *ListFeaturesService) Call(ctx context.Context, params *domain.ListFeatu
 	}
 
 	features, err := s.featureRepository.List(ctx, &domain.FeatureListArgs{
-		Limit:  params.ToLimit(s.defaultPageSize),
-		Offset: params.ToOffset(s.defaultPageNumber),
+		Limit:  params.GetLimit(),
+		Offset: params.GetOffset(),
 		Sort:   params.Sort,
 		Filter: filter,
 	})
@@ -41,7 +39,7 @@ func (s *ListFeaturesService) Call(ctx context.Context, params *domain.ListFeatu
 	}
 
 	return &domain.ListFeaturesResult{
-		PaginationResult: params.ToPaginationResult(featureSize),
+		PaginationResult: params.PaginationResult(featureSize),
 		Size:             featureSize,
 		Features:         features,
 	}, nil
@@ -50,13 +48,9 @@ func (s *ListFeaturesService) Call(ctx context.Context, params *domain.ListFeatu
 func NewListFeaturesService(
 	featureRepository domain.FeatureRepository,
 	logger grpclog.LoggerV2,
-	defaultPageNumber uint32,
-	defaultPageSize uint32,
 ) domain.FeaturesListable {
 	return &ListFeaturesService{
 		featureRepository: featureRepository,
 		logger:            logger,
-		defaultPageNumber: defaultPageNumber,
-		defaultPageSize:   defaultPageSize,
 	}
 }

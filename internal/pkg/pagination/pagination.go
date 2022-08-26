@@ -14,31 +14,23 @@ type PaginationResult struct {
 	Size       uint32
 }
 
-func (params *PaginationParams) ToLimit(defaultPageSize uint32) uint32 {
-	if defaultPageSize == 0 {
-		defaultPageSize = 10
-	}
-
+func (params *PaginationParams) GetLimit() uint32 {
 	if params.PageSize == 0 {
-		return defaultPageSize
+		return 10
 	}
 
 	return params.PageSize
 }
 
-func (params *PaginationParams) ToOffset(defaultPageNumber uint32) uint32 {
-	if defaultPageNumber == 0 {
-		defaultPageNumber = 1
-	}
-
+func (params *PaginationParams) GetOffset() uint32 {
 	if params.PageNumber == 0 {
-		params.PageNumber = defaultPageNumber
+		params.PageNumber = 1
 	}
 
 	return (params.PageNumber - 1) * params.PageSize
 }
 
-func (params *PaginationParams) ToPaginationResult(size uint32) *PaginationResult {
+func (params *PaginationParams) PaginationResult(size uint32) *PaginationResult {
 	result := &PaginationResult{}
 
 	if params.PageNumber == 0 {

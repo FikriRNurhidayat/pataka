@@ -11,6 +11,10 @@ WHERE feature_name = $1
 AND audience_id = $2;
 `
 
+const DELETE_BY_SQL = `
+DELETE FROM feature_audiences
+`
+
 const GET_SQL = `
 SELECT feature_audiences.feature_name,
 	   feature_audiences.audience_id,
@@ -21,6 +25,16 @@ SELECT feature_audiences.feature_name,
 FROM feature_audiences
 WHERE feature_name = $1
 AND audience_id = $2;
+`
+
+const GET_BY_SQL = `
+SELECT feature_audiences.feature_name,
+	   feature_audiences.audience_id,
+	   feature_audiences.enabled,
+	   feature_audiences.created_at,
+	   feature_audiences.updated_at,
+	   feature_audiences.enabled_at
+FROM feature_audiences
 `
 
 const LIST_SQL = `

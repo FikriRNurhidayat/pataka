@@ -56,7 +56,7 @@ func (r *PostgresFeatureRepository) Scan(rows *sql.Rows) (*domain.Feature, error
 		&feature.UpdatedAt,
 		&ea,
 	); err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to scan: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to scan: %s", err.Error())
 		return nil, err
 	}
 

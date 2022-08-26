@@ -13,6 +13,11 @@ PATAKA_DATABASE_URL="postgres://${PATAKA_DATABASE_USER}:${PATAKA_DATABASE_PASSWO
 develop:
 	go run main.go serve
 
+mock: format
+	rm -rf mocks
+	mockery --all --keeptree --dir internal --output internal/mocks
+	mockery --all --output mocks/google.golang.org/grpc/grpclog --srcpkg google.golang.org/grpc/grpclog
+
 format:
 	go fmt ./...
 

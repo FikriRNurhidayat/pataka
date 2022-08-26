@@ -3,7 +3,6 @@ package audience
 import (
 	"context"
 
-	"github.com/fikrirnurhidayat/ffgo/internal/auth"
 	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
@@ -11,42 +10,37 @@ import (
 )
 
 type DeleteAudienceService struct {
-	authentication     auth.Authenticatable
-	audienceRepository domain.AudienceRepository
-	logger             grpclog.LoggerV2
+	unitOfWork domain.UnitOfWork
+	logger     grpclog.LoggerV2
 }
 
 func (s *DeleteAudienceService) Call(ctx context.Context, params *domain.DeleteAudienceParams) error {
-	if err := s.authentication.Valid(ctx); err != nil {
-		return err
-	}
+	return s.unitOfWork.Do(ctx, func(r domain.Repository) error {
+		audience, err := r.AudienceRepository().Get(ctx, params.FeatureName, params.AudienceId)
+		if err != nil {
+			s.logger.Error("[delete-audience-service] failed to retrieve a audience on repository")
+			return status.Error(codes.Internal, "Internal server error")
+		}
 
-	audience, err := s.audienceRepository.Get(ctx, params.FeatureName, params.AudienceId)
-	if err != nil {
-		s.logger.Error("[delete-audience-service] failed to retrieve a audience on repository")
-		return status.Error(codes.Internal, "Internal server error")
-	}
+		if audience == nil {
+			return status.Error(codes.NotFound, "Audience not found")
+		}
 
-	if audience == nil {
-		return status.Error(codes.NotFound, "Audience not found")
-	}
+		if err := r.AudienceRepository().Delete(ctx, audience); err != nil {
+			s.logger.Error("[delete-audience-service] failed to delete a audience on repository")
+			return status.Error(codes.Internal, "Internal server error")
+		}
 
-	if err := s.audienceRepository.Delete(ctx, audience); err != nil {
-		s.logger.Error("[delete-audience-service] failed to delete a audience on repository")
-		return status.Error(codes.Internal, "Internal server error")
-	}
-
-	return nil
+		return nil
+	})
 }
 
 func NewDeleteAudienceService(
-	authentication auth.Authenticatable,
-	audienceRepository domain.AudienceRepository,
+	unitOfWork domain.UnitOfWork,
 	logger grpclog.LoggerV2,
 ) domain.AudienceDeletable {
 	return &DeleteAudienceService{
-		authentication:     authentication,
-		audienceRepository: audienceRepository,
-		logger:             logger,
+		unitOfWork: unitOfWork,
+		logger:     logger,
 	}
 }

@@ -58,3 +58,7 @@ const DELETE_SQL = `
 DELETE FROM features
 WHERE name = $1;
 `
+
+const DELETE_BY_SQL = `
+DELETE FROM features
+`

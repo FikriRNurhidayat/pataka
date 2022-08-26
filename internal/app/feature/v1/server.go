@@ -1,9 +1,7 @@
 package feature
 
 import (
-	"github.com/fikrirnurhidayat/ffgo/internal/auth"
 	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc/grpclog"
 
 	featurev1 "github.com/fikrirnurhidayat/ffgo/protobuf/feature/v1"
@@ -17,6 +15,7 @@ type Server struct {
 	getFeatureService    domain.FeatureGetable
 	listFeaturesService  domain.FeaturesListable
 	featureRepository    domain.FeatureRepository
+	unitOfWork           domain.UnitOfWork
 	logger               grpclog.LoggerV2
 }
 
@@ -29,12 +28,11 @@ func NewServer(opts ...ServerOpts) featurev1.FeatureServiceServer {
 		set(s)
 	}
 
-	authentication := auth.New(viper.GetString("admin.secret"))
-	s.createFeatureService = NewCreateFeatureService(authentication, s.featureRepository, s.logger)
-	s.listFeaturesService = NewListFeaturesService(s.featureRepository, s.logger, 1, 10)
+	s.createFeatureService = NewCreateFeatureService(s.unitOfWork, s.logger)
+	s.listFeaturesService = NewListFeaturesService(s.featureRepository, s.logger)
 	s.getFeatureService = NewGetFeatureService(s.featureRepository, s.logger)
-	s.updateFeatureService = NewUpdateFeatureService(authentication, s.featureRepository, s.logger)
-	s.deleteFeatureService = NewDeleteFeatureService(authentication, s.featureRepository, s.logger)
+	s.updateFeatureService = NewUpdateFeatureService(s.unitOfWork, s.logger)
+	s.deleteFeatureService = NewDeleteFeatureService(s.unitOfWork, s.logger)
 
 	return s
 }
@@ -42,6 +40,12 @@ func NewServer(opts ...ServerOpts) featurev1.FeatureServiceServer {
 func WithLogger(logger grpclog.LoggerV2) ServerOpts {
 	return func(fs *Server) {
 		fs.logger = logger
+	}
+}
+
+func WithUnitOfWork(unitOfWork domain.UnitOfWork) ServerOpts {
+	return func(fs *Server) {
+		fs.unitOfWork = unitOfWork
 	}
 }
 

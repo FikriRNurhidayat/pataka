@@ -11,18 +11,59 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
+var SortMap = map[string]string{
+	"name":               "features.name",
+	"label":              "features.label",
+	"enabled":            "features.enabled",
+	"has_audience":       "features.has_audience",
+	"has_audience_group": "features.has_audience_group",
+	"created_at":         "features.created_at",
+	"updated_at":         "features.updated_at",
+	"enabled_at":         "features.enabled_at",
+}
+
 type PostgresFeatureRepository struct {
-	Logger grpclog.LoggerV2
 	driver.DB
+	logger grpclog.LoggerV2
 }
 
-// DeleteBy implements domain.FeatureRepository
-func (*PostgresFeatureRepository) DeleteBy(ctx context.Context, args *domain.FeatureFilterArgs) error {
-	panic("unimplemented")
+func (r *PostgresFeatureRepository) DeleteBy(ctx context.Context, args *domain.FeatureFilterArgs) error {
+	var (
+		query string = DELETE_BY_SQL
+		qargs []interface{}
+	)
+
+	if args != nil {
+		filterQuery, filterArgs, err := r.Filter(*args)
+		if err != nil {
+			r.logger.Errorf("[postgres-feature-repository] failed to build filter delete query: %s", err.Error())
+			return err
+		}
+
+		if !inspector.IsEmpty(filterQuery) {
+			query = fmt.Sprint(query, "WHERE ", filterQuery)
+			qargs = append(qargs, filterArgs...)
+		}
+	}
+
+	query = r.Rebind(query)
+
+	stmt, err := r.PrepareContext(ctx, query)
+	if err != nil {
+		r.logger.Errorf("[postgres-feature-repository] failed to prepare delete statement: %s", err.Error())
+		return err
+	}
+
+	_, err = stmt.ExecContext(ctx, qargs...)
+	if err != nil {
+		r.logger.Errorf("[postgres-feature-repository] failed to execute delete statement: %s", err.Error())
+		return err
+	}
+
+	return nil
 }
 
-// GetBy implements domain.FeatureRepository
-func (r *PostgresFeatureRepository) GetBy(ctx context.Context, args *domain.FeatureGetArgs) (feature *domain.Feature, err error) {
+func (r *PostgresFeatureRepository) GetBy(ctx context.Context, args *domain.FeatureGetByArgs) (feature *domain.Feature, err error) {
 	var (
 		query string = GET_BY_SQL
 		qargs []interface{}
@@ -31,7 +72,7 @@ func (r *PostgresFeatureRepository) GetBy(ctx context.Context, args *domain.Feat
 	if args != nil {
 		filterQuery, filterArgs, err := r.Filter(*args.Filter)
 		if err != nil {
-			r.Logger.Errorf("[postgres-feature-repository] failed to build filter get query: %s", err.Error())
+			r.logger.Errorf("[postgres-feature-repository] failed to build filter get query: %s", err.Error())
 			return nil, err
 		}
 
@@ -42,9 +83,9 @@ func (r *PostgresFeatureRepository) GetBy(ctx context.Context, args *domain.Feat
 	}
 
 	if args.Sort != "" {
-		sortQuery, err := queryhelper.Sort(args.Sort, SORT_MAP)
+		sortQuery, err := queryhelper.Sort(args.Sort, SortMap)
 		if err != nil {
-			r.Logger.Errorf("[postgres-feature-repository] failed to build sort list query: %s", err.Error())
+			r.logger.Errorf("[postgres-feature-repository] failed to build sort list query: %s", err.Error())
 			return nil, err
 		}
 
@@ -59,20 +100,20 @@ func (r *PostgresFeatureRepository) GetBy(ctx context.Context, args *domain.Feat
 
 	stmt, err := r.PrepareContext(ctx, query)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to prepare get statement: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to prepare get statement: %s", err.Error())
 		return nil, err
 	}
 
 	rows, err := stmt.QueryContext(ctx, qargs...)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to get: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to get: %s", err.Error())
 		return nil, err
 	}
 
 	for rows.Next() {
 		feature, err = r.Scan(rows)
 		if err != nil {
-			r.Logger.Errorf("Failed to scan query result: %s", err.Error())
+			r.logger.Errorf("Failed to scan query result: %s", err.Error())
 			return nil, err
 		}
 	}
@@ -80,34 +121,23 @@ func (r *PostgresFeatureRepository) GetBy(ctx context.Context, args *domain.Feat
 	return feature, nil
 }
 
-var SORT_MAP = map[string]string{
-	"name":               "features.name",
-	"label":              "features.label",
-	"enabled":            "features.enabled",
-	"has_audience":       "features.has_audience",
-	"has_audience_group": "features.has_audience_group",
-	"created_at":         "features.created_at",
-	"updated_at":         "features.updated_at",
-	"enabled_at":         "features.enabled_at",
-}
-
 func (r *PostgresFeatureRepository) Get(ctx context.Context, name string) (feature *domain.Feature, err error) {
 	stmt, err := r.PrepareContext(ctx, GET_SQL)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to prepare get statement: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to prepare get statement: %s", err.Error())
 		return nil, err
 	}
 
 	rows, err := stmt.QueryContext(ctx, name)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to run get statement: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to run get statement: %s", err.Error())
 		return nil, err
 	}
 
 	for rows.Next() {
 		feature, err = r.Scan(rows)
 		if err != nil {
-			r.Logger.Errorf("Failed to scan query result: %s", err.Error())
+			r.logger.Errorf("Failed to scan query result: %s", err.Error())
 			return nil, err
 		}
 	}
@@ -124,7 +154,7 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.Featu
 	if args.Filter != nil {
 		filterQuery, filterArgs, err := r.Filter(*args.Filter)
 		if err != nil {
-			r.Logger.Errorf("[postgres-feature-repository] failed to build filter list query: %s", err.Error())
+			r.logger.Errorf("[postgres-feature-repository] failed to build filter list query: %s", err.Error())
 			return features, err
 		}
 
@@ -135,9 +165,9 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.Featu
 	}
 
 	if args.Sort != "" {
-		sortQuery, err := queryhelper.Sort(args.Sort, SORT_MAP)
+		sortQuery, err := queryhelper.Sort(args.Sort, SortMap)
 		if err != nil {
-			r.Logger.Errorf("[postgres-feature-repository] failed to build sort list query: %s", err.Error())
+			r.logger.Errorf("[postgres-feature-repository] failed to build sort list query: %s", err.Error())
 			return features, err
 		}
 
@@ -152,13 +182,13 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.Featu
 
 	stmt, err := r.PrepareContext(ctx, query)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to prepare list statement: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to prepare list statement: %s", err.Error())
 		return features, err
 	}
 
 	rows, err := stmt.QueryContext(ctx, qargs...)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to query list: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to query list: %s", err.Error())
 		return features, err
 	}
 
@@ -167,7 +197,7 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.Featu
 	for rows.Next() {
 		feature, err := r.Scan(rows)
 		if err != nil {
-			r.Logger.Errorf("[postgres-feature-repository] failed to scan list: %s", err.Error())
+			r.logger.Errorf("[postgres-feature-repository] failed to scan list: %s", err.Error())
 			return nil, err
 		}
 		features = append(features, *feature)
@@ -197,19 +227,19 @@ func (r *PostgresFeatureRepository) Save(ctx context.Context, feature *domain.Fe
 
 	query, qargs, err := r.BindNamed(query, args)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to bind query for save operation: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to bind query for save operation: %s", err.Error())
 		return err
 	}
 
 	stmt, err := r.PrepareContext(ctx, query)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to prepare save query: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to prepare save query: %s", err.Error())
 		return err
 	}
 
 	_, err = stmt.ExecContext(ctx, qargs...)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to save: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to save: %s", err.Error())
 		return err
 	}
 
@@ -219,13 +249,13 @@ func (r *PostgresFeatureRepository) Save(ctx context.Context, feature *domain.Fe
 func (r *PostgresFeatureRepository) Delete(ctx context.Context, name string) error {
 	stmt, err := r.PrepareContext(ctx, DELETE_SQL)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to prepare delete statement: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to prepare delete statement: %s", err.Error())
 		return err
 	}
 
 	_, err = stmt.ExecContext(ctx, name)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to run delete statement: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to run delete statement: %s", err.Error())
 		return err
 	}
 
@@ -241,7 +271,7 @@ func (r *PostgresFeatureRepository) Size(ctx context.Context, args *domain.Featu
 	if args != nil {
 		filterQuery, filterArgs, err := r.Filter(*args)
 		if err != nil {
-			r.Logger.Errorf("[postgres-feature-repository] failed to build filter count query: %s", err.Error())
+			r.logger.Errorf("[postgres-feature-repository] failed to build filter count query: %s", err.Error())
 			return 0, err
 		}
 
@@ -255,13 +285,13 @@ func (r *PostgresFeatureRepository) Size(ctx context.Context, args *domain.Featu
 
 	stmt, err := r.PrepareContext(ctx, query)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to prepare count statement: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to prepare count statement: %s", err.Error())
 		return 0, err
 	}
 
 	rows, err := stmt.QueryContext(ctx, qargs...)
 	if err != nil {
-		r.Logger.Errorf("[postgres-feature-repository] failed to count: %s", err.Error())
+		r.logger.Errorf("[postgres-feature-repository] failed to count: %s", err.Error())
 		return 0, err
 	}
 
@@ -270,7 +300,7 @@ func (r *PostgresFeatureRepository) Size(ctx context.Context, args *domain.Featu
 	for rows.Next() {
 		err := rows.Scan(&count)
 		if err != nil {
-			r.Logger.Errorf("[postgres-feature-repository] failed to scan count result: %s", err.Error())
+			r.logger.Errorf("[postgres-feature-repository] failed to scan count result: %s", err.Error())
 			return 0, err
 		}
 	}
@@ -278,10 +308,10 @@ func (r *PostgresFeatureRepository) Size(ctx context.Context, args *domain.Featu
 	return uint32(count), nil
 }
 
-func NewPostgresRepository(db driver.DB, Logger grpclog.LoggerV2) domain.FeatureRepository {
+func NewPostgresRepository(db driver.DB, logger grpclog.LoggerV2) domain.FeatureRepository {
 	r := new(PostgresFeatureRepository)
 
-	r.Logger = Logger
+	r.logger = logger
 	r.DB = db
 
 	return r

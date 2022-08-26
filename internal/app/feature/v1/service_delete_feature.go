@@ -3,7 +3,6 @@ package feature
 import (
 	"context"
 
-	"github.com/fikrirnurhidayat/ffgo/internal/auth"
 	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
@@ -11,42 +10,44 @@ import (
 )
 
 type DeleteFeatureService struct {
-	authentication    auth.Authenticatable
-	featureRepository domain.FeatureRepository
-	logger            grpclog.LoggerV2
+	unitOfWork domain.UnitOfWork
+	logger     grpclog.LoggerV2
 }
 
 func (s *DeleteFeatureService) Call(ctx context.Context, params *domain.DeleteFeatureParams) error {
-	if err := s.authentication.Valid(ctx); err != nil {
-		return err
-	}
+	return s.unitOfWork.Do(ctx, func(r domain.Repository) error {
+		feature, err := r.FeatureRepository().Get(ctx, params.Name)
+		if err != nil {
+			s.logger.Errorf("[delete-feature-service] failed to retrieve a feature resource: %s", err.Error())
+			return status.Error(codes.Internal, "Internal server error")
+		}
 
-	feature, err := s.featureRepository.Get(ctx, params.Name)
-	if err != nil {
-		s.logger.Errorf("[delete-feature-service] failed to retrieve a feature resource: %s", err.Error())
-		return status.Error(codes.Internal, "Internal server error")
-	}
+		if feature == nil {
+			return status.Error(codes.NotFound, "Feature not found")
+		}
 
-	if feature == nil {
-		return status.Error(codes.NotFound, "Feature not found")
-	}
+		if err := r.FeatureRepository().Delete(ctx, feature.Name); err != nil {
+			s.logger.Errorf("[delete-feature-service] failed to delete a feature resource: %s", err.Error())
+			return status.Error(codes.Internal, "Internal server error")
+		}
 
-	if err := s.featureRepository.Delete(ctx, feature.Name); err != nil {
-		s.logger.Errorf("[delete-feature-service] failed to delete a feature resource: %s", err.Error())
-		return status.Error(codes.Internal, "Internal server error")
-	}
+		if err := r.AudienceRepository().DeleteBy(ctx, &domain.AudienceFilterArgs{
+			FeatureName: feature.Name,
+		}); err != nil {
+			s.logger.Errorf("[delete-feature-service] failed to bulk delete audience collections: %s", err.Error())
+			return status.Error(codes.Internal, "Internal server error")
+		}
 
-	return nil
+		return nil
+	})
 }
 
 func NewDeleteFeatureService(
-	authentication auth.Authenticatable,
-	featureRepository domain.FeatureRepository,
+	unitOfWork domain.UnitOfWork,
 	logger grpclog.LoggerV2,
 ) domain.FeatureDeletable {
 	return &DeleteFeatureService{
-		authentication:    authentication,
-		featureRepository: featureRepository,
-		logger:            logger,
+		unitOfWork: unitOfWork,
+		logger:     logger,
 	}
 }

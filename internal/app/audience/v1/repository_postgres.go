@@ -13,27 +13,111 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-type PostgresAudienceRepository struct {
-	logger grpclog.LoggerV2
-	driver.DB
-}
-
-// DeleteBy implements domain.AudienceRepository
-func (*PostgresAudienceRepository) DeleteBy(ctx context.Context, args *domain.AudienceFilterArgs) error {
-	panic("unimplemented")
-}
-
-// GetBy implements domain.AudienceRepository
-func (*PostgresAudienceRepository) GetBy(ctx context.Context, args *domain.AudienceFilterArgs) (*domain.Audience, error) {
-	panic("unimplemented")
-}
-
-var SORT_MAP = map[string]string{
+var SortMap = map[string]string{
 	"id":           "audiences.id",
 	"feature_name": "audiences.feature_name",
 	"user_id":      "audiences.user_id",
 	"created_at":   "audiences.created_at",
 	"updated_at":   "audiences.updated_at",
+}
+
+type PostgresAudienceRepository struct {
+	logger grpclog.LoggerV2
+	driver.DB
+}
+
+func (r *PostgresAudienceRepository) DeleteBy(ctx context.Context, args *domain.AudienceFilterArgs) error {
+	var (
+		query string = DELETE_BY_SQL
+		qargs []interface{}
+	)
+
+	if args != nil {
+		filterQuery, filterArgs, err := r.Filter(*args)
+		if err != nil {
+			r.logger.Errorf("[postgres-audience-repository] failed to build filter delete query: %s", err.Error())
+			return err
+		}
+
+		if !inspector.IsEmpty(filterQuery) {
+			query = fmt.Sprint(query, "WHERE ", filterQuery)
+			qargs = append(qargs, filterArgs...)
+		}
+	}
+
+	query = r.Rebind(query)
+
+	stmt, err := r.PrepareContext(ctx, query)
+	if err != nil {
+		r.logger.Errorf("[postgres-audience-repository] failed to prepare delete statement: %s", err.Error())
+		return err
+	}
+
+	_, err = stmt.ExecContext(ctx, qargs...)
+	if err != nil {
+		r.logger.Errorf("[postgres-audience-repository] failed to execute delete statement: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (r *PostgresAudienceRepository) GetBy(ctx context.Context, args *domain.AudienceGetByArgs) (audience *domain.Audience, err error) {
+	var (
+		query string = GET_BY_SQL
+		qargs []interface{}
+	)
+
+	if args != nil {
+		filterQuery, filterArgs, err := r.Filter(*args.Filter)
+		if err != nil {
+			r.logger.Errorf("[postgres-audience-repository] failed to build filter get query: %s", err.Error())
+			return nil, err
+		}
+
+		if !inspector.IsEmpty(filterQuery) {
+			query = fmt.Sprint(query, "WHERE ", filterQuery)
+			qargs = append(qargs, filterArgs...)
+		}
+	}
+
+	if args.Sort != "" {
+		sortQuery, err := queryhelper.Sort(args.Sort, SortMap)
+		if err != nil {
+			r.logger.Errorf("[postgres-audience-repository] failed to build sort list query: %s", err.Error())
+			return nil, err
+		}
+
+		query = fmt.Sprint(query, " ", sortQuery)
+	}
+
+	paginationQuery, paginationArgs := queryhelper.Paginate(1, 0)
+	query = fmt.Sprint(query, paginationQuery)
+	qargs = append(qargs, paginationArgs...)
+
+	query = r.Rebind(query)
+
+	stmt, err := r.PrepareContext(ctx, query)
+	if err != nil {
+		r.logger.Errorf("[postgres-audience-repository] failed to prepare get statement: %s", err.Error())
+		return nil, err
+	}
+
+	rows, err := stmt.QueryContext(ctx, qargs...)
+	if err != nil {
+		r.logger.Errorf("[postgres-audience-repository] failed to get: %s", err.Error())
+		return nil, err
+	}
+
+	for rows.Next() {
+		audience, err = r.Scan(rows)
+		if err != nil {
+			r.logger.Errorf("Failed to scan query result: %s", err.Error())
+			return nil, err
+		}
+	}
+
+	return audience, nil
 }
 
 func (r *PostgresAudienceRepository) Get(ctx context.Context, fn string, ui string) (audience *domain.Audience, err error) {
@@ -82,7 +166,7 @@ func (r *PostgresAudienceRepository) List(ctx context.Context, args *domain.Audi
 
 	// Sort if sort argument is specified
 	if !inspector.IsEmpty(args.Sort) {
-		sortQuery, err := queryhelper.Sort(args.Sort, SORT_MAP)
+		sortQuery, err := queryhelper.Sort(args.Sort, SortMap)
 		if err != nil {
 			r.logger.Errorf("[postgres-audience-repository] failed to build sort list query: %s", err.Error())
 			return audiences, err
@@ -195,7 +279,6 @@ func (r *PostgresAudienceRepository) Save(ctx context.Context, audience *domain.
 		"enabled":      audience.Enabled,
 		"created_at":   audience.CreatedAt,
 		"updated_at":   audience.UpdatedAt,
-		"enabled_at":   audience.EnabledAt,
 	}
 
 	if !audience.EnabledAt.IsZero() {
@@ -212,29 +295,29 @@ func (r *PostgresAudienceRepository) Save(ctx context.Context, audience *domain.
 
 	query, qargs, err := r.BindNamed(query, args)
 	if err != nil {
-		r.logger.Errorf("[postgres-audience-repository] failed to bind query for save operation: %s", err.Error())
+		r.logger.Errorf("[postgres-audience-repository] failed to bind save query: %s", err.Error())
 		return err
 	}
 
 	stmt, err := r.PrepareContext(ctx, query)
 	if err != nil {
-		r.logger.Errorf("[postgres-audience-repository] failed to prepare save query: %s", err.Error())
+		r.logger.Errorf("[postgres-audience-repository] failed to prepare save statement: %s", err.Error())
 		return err
 	}
 
 	_, err = stmt.ExecContext(ctx, qargs...)
 	if err != nil {
-		r.logger.Errorf("[postgres-audience-repository] failed to save: %s", err.Error())
+		r.logger.Errorf("[postgres-audience-repository] failed to execute save statement: %s", err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func NewPostgresRepository(db driver.DB, Logger grpclog.LoggerV2) domain.AudienceRepository {
+func NewPostgresRepository(db driver.DB, logger grpclog.LoggerV2) domain.AudienceRepository {
 	r := new(PostgresAudienceRepository)
 
-	r.logger = Logger
+	r.logger = logger
 	r.DB = db
 
 	return r
