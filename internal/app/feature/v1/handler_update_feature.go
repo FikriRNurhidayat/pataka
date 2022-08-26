@@ -14,7 +14,7 @@ func (s *Server) UpdateFeature(ctx context.Context, req *featurev1.UpdateFeature
 		Enabled: req.GetEnabled(),
 	})
 	if err != nil {
-		s.Logger.Info("[update-feature-handler] failed to update a feature resource")
+		s.logger.Info("[update-feature-handler] failed to update a feature resource")
 		return nil, err
 	}
 

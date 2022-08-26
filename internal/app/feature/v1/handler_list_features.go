@@ -36,7 +36,7 @@ func (s *Server) ListFeatures(ctx context.Context, req *featurev1.ListFeaturesRe
 	})
 
 	if err != nil {
-		s.Logger.Info("[list-features-handler] failed to list feature collection")
+		s.logger.Info("[list-features-handler] failed to list feature collection")
 		return nil, err
 	}
 

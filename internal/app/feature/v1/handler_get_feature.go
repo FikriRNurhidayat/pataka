@@ -12,7 +12,7 @@ func (s *Server) GetFeature(ctx context.Context, req *featurev1.GetFeatureReques
 		Name: req.GetName(),
 	})
 	if err != nil {
-		s.Logger.Info("[get-feature-handler] failed to get a feature resource")
+		s.logger.Info("[get-feature-handler] failed to get a feature resource")
 		return nil, err
 	}
 

@@ -22,8 +22,62 @@ func (*PostgresFeatureRepository) DeleteBy(ctx context.Context, args *domain.Fea
 }
 
 // GetBy implements domain.FeatureRepository
-func (*PostgresFeatureRepository) GetBy(ctx context.Context, args *domain.FeatureFilterArgs) (*domain.Feature, error) {
-	panic("unimplemented")
+func (r *PostgresFeatureRepository) GetBy(ctx context.Context, args *domain.FeatureGetArgs) (feature *domain.Feature, err error) {
+	var (
+		query string = GET_BY_SQL
+		qargs []interface{}
+	)
+
+	if args != nil {
+		filterQuery, filterArgs, err := r.Filter(*args.Filter)
+		if err != nil {
+			r.Logger.Errorf("[postgres-feature-repository] failed to build filter get query: %s", err.Error())
+			return nil, err
+		}
+
+		if !inspector.IsEmpty(filterQuery) {
+			query = fmt.Sprint(query, "WHERE ", filterQuery)
+			qargs = append(qargs, filterArgs...)
+		}
+	}
+
+	if args.Sort != "" {
+		sortQuery, err := queryhelper.Sort(args.Sort, SORT_MAP)
+		if err != nil {
+			r.Logger.Errorf("[postgres-feature-repository] failed to build sort list query: %s", err.Error())
+			return nil, err
+		}
+
+		query = fmt.Sprint(query, " ", sortQuery)
+	}
+
+	paginationQuery, paginationArgs := queryhelper.Paginate(1, 0)
+	query = fmt.Sprint(query, paginationQuery)
+	qargs = append(qargs, paginationArgs...)
+
+	query = r.Rebind(query)
+
+	stmt, err := r.PrepareContext(ctx, query)
+	if err != nil {
+		r.Logger.Errorf("[postgres-feature-repository] failed to prepare get statement: %s", err.Error())
+		return nil, err
+	}
+
+	rows, err := stmt.QueryContext(ctx, qargs...)
+	if err != nil {
+		r.Logger.Errorf("[postgres-feature-repository] failed to get: %s", err.Error())
+		return nil, err
+	}
+
+	for rows.Next() {
+		feature, err = r.Scan(rows)
+		if err != nil {
+			r.Logger.Errorf("Failed to scan query result: %s", err.Error())
+			return nil, err
+		}
+	}
+
+	return feature, nil
 }
 
 var SORT_MAP = map[string]string{

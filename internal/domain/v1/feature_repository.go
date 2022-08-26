@@ -7,7 +7,7 @@ import (
 type FeatureRepository interface {
 	Save(ctx context.Context, feature *Feature) error
 	Get(ctx context.Context, name string) (*Feature, error)
-	GetBy(ctx context.Context, args *FeatureFilterArgs) (*Feature, error)
+	GetBy(ctx context.Context, args *FeatureGetArgs) (*Feature, error)
 	List(ctx context.Context, args *FeatureListArgs) ([]Feature, error)
 	Delete(ctx context.Context, name string) error
 	Size(ctx context.Context, args *FeatureFilterArgs) (uint32, error)
@@ -19,6 +19,11 @@ type FeatureFilterArgs struct {
 	Name    string `db:"name"`
 	Label   string `db:"label"`
 	Enabled *bool  `db:"enabled"`
+}
+
+type FeatureGetArgs struct {
+	Sort   string
+	Filter *FeatureFilterArgs
 }
 
 type FeatureListArgs struct {

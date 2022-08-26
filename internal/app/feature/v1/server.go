@@ -3,7 +3,6 @@ package feature
 import (
 	"github.com/fikrirnurhidayat/ffgo/internal/auth"
 	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
-	"github.com/fikrirnurhidayat/ffgo/internal/driver"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc/grpclog"
 
@@ -17,8 +16,8 @@ type Server struct {
 	updateFeatureService domain.FeatureUpdatable
 	getFeatureService    domain.FeatureGetable
 	listFeaturesService  domain.FeaturesListable
-	Logger               grpclog.LoggerV2
-	DB                   driver.DB
+	featureRepository    domain.FeatureRepository
+	logger               grpclog.LoggerV2
 }
 
 type ServerOpts func(*Server)
@@ -31,24 +30,23 @@ func NewServer(opts ...ServerOpts) featurev1.FeatureServiceServer {
 	}
 
 	authentication := auth.New(viper.GetString("admin.secret"))
-	featureRepository := NewPostgresRepository(s.DB, s.Logger)
-	s.createFeatureService = NewCreateFeatureService(authentication, featureRepository, s.Logger)
-	s.listFeaturesService = NewListFeaturesService(featureRepository, s.Logger, 1, 10)
-	s.getFeatureService = NewGetFeatureService(featureRepository, s.Logger)
-	s.updateFeatureService = NewUpdateFeatureService(authentication, featureRepository, s.Logger)
-	s.deleteFeatureService = NewDeleteFeatureService(authentication, featureRepository, s.Logger)
+	s.createFeatureService = NewCreateFeatureService(authentication, s.featureRepository, s.logger)
+	s.listFeaturesService = NewListFeaturesService(s.featureRepository, s.logger, 1, 10)
+	s.getFeatureService = NewGetFeatureService(s.featureRepository, s.logger)
+	s.updateFeatureService = NewUpdateFeatureService(authentication, s.featureRepository, s.logger)
+	s.deleteFeatureService = NewDeleteFeatureService(authentication, s.featureRepository, s.logger)
 
 	return s
 }
 
 func WithLogger(logger grpclog.LoggerV2) ServerOpts {
 	return func(fs *Server) {
-		fs.Logger = logger
+		fs.logger = logger
 	}
 }
 
-func WithDB(db driver.DB) ServerOpts {
+func WithFeatureRepository(featureRepository domain.FeatureRepository) ServerOpts {
 	return func(fs *Server) {
-		fs.DB = db
+		fs.featureRepository = featureRepository
 	}
 }

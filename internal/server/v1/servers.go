@@ -14,13 +14,16 @@ var (
 )
 
 func bootstrapServers() {
+	featureRepository := feature.NewPostgresRepository(db, logger)
 	featureServer = feature.NewServer(
-		feature.WithDB(db),
 		feature.WithLogger(logger),
+		feature.WithFeatureRepository(featureRepository),
 	)
 
+	audienceRepository := audience.NewPostgresRepository(db, logger)
 	audienceServer = audience.NewServer(
-		audience.WithDB(db),
+		audience.WithAudienceRepository(audienceRepository),
+		audience.WithFeatureRepository(featureRepository),
 		audience.WithLogger(logger),
 	)
 }

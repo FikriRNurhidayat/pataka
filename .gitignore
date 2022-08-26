@@ -7,3 +7,7 @@ tmp/
 *.http
 vendor
 .vscode
+.netrc
+junit.xml
+coverage.lcov.info
+coverage.xml

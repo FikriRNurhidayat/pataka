@@ -12,7 +12,7 @@ func (s *Server) DeleteFeature(ctx context.Context, req *featurev1.DeleteFeature
 		Name: req.GetName(),
 	})
 	if err != nil {
-		s.Logger.Info("[delete-feature-handler] failed to delete a feature resource")
+		s.logger.Info("[delete-feature-handler] failed to delete a feature resource")
 		return nil, err
 	}
 

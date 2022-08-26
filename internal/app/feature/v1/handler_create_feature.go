@@ -14,7 +14,7 @@ func (s *Server) CreateFeature(ctx context.Context, req *featurev1.CreateFeature
 		Enabled: req.GetEnabled(),
 	})
 	if err != nil {
-		s.Logger.Info("[create-feature-handler] failed to create a feature resource")
+		s.logger.Info("[create-feature-handler] failed to create a feature resource")
 		return nil, err
 	}
 

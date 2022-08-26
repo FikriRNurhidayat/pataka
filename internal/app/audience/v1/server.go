@@ -1,10 +1,8 @@
 package audience
 
 import (
-	"github.com/fikrirnurhidayat/ffgo/internal/app/feature/v1"
 	"github.com/fikrirnurhidayat/ffgo/internal/auth"
 	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
-	"github.com/fikrirnurhidayat/ffgo/internal/driver"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc/grpclog"
 
@@ -20,7 +18,8 @@ type Server struct {
 	getAudienceService         domain.AudienceGetable
 	listAudiencesService       domain.AudienceListable
 	logger                     grpclog.LoggerV2
-	db                         driver.DB
+	audienceRepository         domain.AudienceRepository
+	featureRepository          domain.FeatureRepository
 }
 
 type ServerOpts func(*Server)
@@ -33,13 +32,11 @@ func NewServer(opts ...ServerOpts) audiencev1.AudienceServiceServer {
 	}
 
 	authentication := auth.New(viper.GetString("admin.secret"))
-	audienceRepository := NewPostgresRepository(s.db, s.logger)
-	featureRepository := feature.NewPostgresRepository(s.db, s.logger)
-	s.createAudienceService = NewCreateAudienceService(authentication, audienceRepository, featureRepository, s.logger)
-	s.listAudiencesService = NewListAudiencesService(audienceRepository, s.logger, 1, 10)
-	s.getAudienceService = NewGetAudienceService(audienceRepository, s.logger)
-	s.updateAudienceService = NewUpdateAudienceService(authentication, audienceRepository, s.logger)
-	s.deleteAudienceService = NewDeleteAudienceService(authentication, audienceRepository, s.logger)
+	s.createAudienceService = NewCreateAudienceService(authentication, s.audienceRepository, s.featureRepository, s.logger)
+	s.listAudiencesService = NewListAudiencesService(s.audienceRepository, s.logger, 1, 10)
+	s.getAudienceService = NewGetAudienceService(s.audienceRepository, s.logger)
+	s.updateAudienceService = NewUpdateAudienceService(authentication, s.audienceRepository, s.logger)
+	s.deleteAudienceService = NewDeleteAudienceService(authentication, s.audienceRepository, s.logger)
 
 	return s
 }
@@ -50,8 +47,14 @@ func WithLogger(logger grpclog.LoggerV2) ServerOpts {
 	}
 }
 
-func WithDB(db driver.DB) ServerOpts {
+func WithAudienceRepository(audienceRepository domain.AudienceRepository) ServerOpts {
 	return func(fs *Server) {
-		fs.db = db
+		fs.audienceRepository = audienceRepository
+	}
+}
+
+func WithFeatureRepository(featureRepository domain.FeatureRepository) ServerOpts {
+	return func(fs *Server) {
+		fs.featureRepository = featureRepository
 	}
 }

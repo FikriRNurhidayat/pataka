@@ -12,6 +12,18 @@ SELECT features.name,
 FROM features
 `
 
+const GET_BY_SQL = `
+SELECT features.name,
+	   features.label,
+	   features.enabled,
+	   features.has_audience,
+	   features.has_audience_group,
+	   features.created_at,
+	   features.updated_at,
+	   features.enabled_at
+FROM features
+`
+
 const SAVE_SQL = `
 INSERT INTO features (name, label, enabled,
 			has_audience, has_audience_group, created_at,

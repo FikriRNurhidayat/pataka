@@ -13,6 +13,14 @@ PATAKA_DATABASE_URL="postgres://${PATAKA_DATABASE_USER}:${PATAKA_DATABASE_PASSWO
 develop:
 	go run main.go serve
 
+format:
+	go fmt ./...
+
+test: format
+	gotestsum --format testname --junitfile junit.xml -- -coverprofile=coverage.lcov.info -covermode count ./...
+	gocover-cobertura < coverage.lcov.info > coverage.xml
+	gototal-cobertura < coverage.xml
+
 # Prepare for development
 .PHONY: prepare
 prepare:

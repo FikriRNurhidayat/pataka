@@ -28,15 +28,8 @@ func (r *PostgresAudienceRepository) Filter(filter domain.AudienceFilterArgs) (q
 	}
 
 	query = strings.Join(queries, " AND ")
-	query, args, err = sqlx.Named(query, filter)
-	if err != nil {
-		return "", nil, err
-	}
-
-	query, args, err = sqlx.In(query, args...)
-	if err != nil {
-		return "", nil, err
-	}
+	query, args, _ = sqlx.Named(query, filter)
+	query, args, _ = sqlx.In(query, args...)
 
 	return query, args, nil
 }
