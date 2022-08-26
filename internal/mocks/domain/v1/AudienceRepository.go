@@ -66,11 +66,11 @@ func (_m *AudienceRepository) Get(ctx context.Context, fn string, ui string) (*d
 }
 
 // GetBy provides a mock function with given fields: ctx, args
-func (_m *AudienceRepository) GetBy(ctx context.Context, args *domain.AudienceFilterArgs) (*domain.Audience, error) {
+func (_m *AudienceRepository) GetBy(ctx context.Context, args *domain.AudienceGetByArgs) (*domain.Audience, error) {
 	ret := _m.Called(ctx, args)
 
 	var r0 *domain.Audience
-	if rf, ok := ret.Get(0).(func(context.Context, *domain.AudienceFilterArgs) *domain.Audience); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.AudienceGetByArgs) *domain.Audience); ok {
 		r0 = rf(ctx, args)
 	} else {
 		if ret.Get(0) != nil {
@@ -79,7 +79,7 @@ func (_m *AudienceRepository) GetBy(ctx context.Context, args *domain.AudienceFi
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *domain.AudienceFilterArgs) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *domain.AudienceGetByArgs) error); ok {
 		r1 = rf(ctx, args)
 	} else {
 		r1 = ret.Error(1)

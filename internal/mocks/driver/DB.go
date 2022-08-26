@@ -61,6 +61,32 @@ func (_m *DB) DriverName() string {
 	return r0
 }
 
+// Exec provides a mock function with given fields: query, args
+func (_m *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
+	var _ca []interface{}
+	_ca = append(_ca, query)
+	_ca = append(_ca, args...)
+	ret := _m.Called(_ca...)
+
+	var r0 sql.Result
+	if rf, ok := ret.Get(0).(func(string, ...interface{}) sql.Result); ok {
+		r0 = rf(query, args...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(sql.Result)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, ...interface{}) error); ok {
+		r1 = rf(query, args...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ExecContext provides a mock function with given fields: ctx, query, args
 func (_m *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	var _ca []interface{}
@@ -87,6 +113,170 @@ func (_m *DB) ExecContext(ctx context.Context, query string, args ...interface{}
 	return r0, r1
 }
 
+// Get provides a mock function with given fields: _a0, _a1, _a2
+func (_m *DB) Get(_a0 interface{}, _a1 string, _a2 ...interface{}) error {
+	var _ca []interface{}
+	_ca = append(_ca, _a0, _a1)
+	_ca = append(_ca, _a2...)
+	ret := _m.Called(_ca...)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(interface{}, string, ...interface{}) error); ok {
+		r0 = rf(_a0, _a1, _a2...)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// GetContext provides a mock function with given fields: _a0, _a1, _a2, _a3
+func (_m *DB) GetContext(_a0 context.Context, _a1 interface{}, _a2 string, _a3 ...interface{}) error {
+	var _ca []interface{}
+	_ca = append(_ca, _a0, _a1, _a2)
+	_ca = append(_ca, _a3...)
+	ret := _m.Called(_ca...)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, string, ...interface{}) error); ok {
+		r0 = rf(_a0, _a1, _a2, _a3...)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MustExec provides a mock function with given fields: _a0, _a1
+func (_m *DB) MustExec(_a0 string, _a1 ...interface{}) sql.Result {
+	var _ca []interface{}
+	_ca = append(_ca, _a0)
+	_ca = append(_ca, _a1...)
+	ret := _m.Called(_ca...)
+
+	var r0 sql.Result
+	if rf, ok := ret.Get(0).(func(string, ...interface{}) sql.Result); ok {
+		r0 = rf(_a0, _a1...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(sql.Result)
+		}
+	}
+
+	return r0
+}
+
+// MustExecContext provides a mock function with given fields: _a0, _a1, _a2
+func (_m *DB) MustExecContext(_a0 context.Context, _a1 string, _a2 ...interface{}) sql.Result {
+	var _ca []interface{}
+	_ca = append(_ca, _a0, _a1)
+	_ca = append(_ca, _a2...)
+	ret := _m.Called(_ca...)
+
+	var r0 sql.Result
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...interface{}) sql.Result); ok {
+		r0 = rf(_a0, _a1, _a2...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(sql.Result)
+		}
+	}
+
+	return r0
+}
+
+// NamedExec provides a mock function with given fields: _a0, _a1
+func (_m *DB) NamedExec(_a0 string, _a1 interface{}) (sql.Result, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 sql.Result
+	if rf, ok := ret.Get(0).(func(string, interface{}) sql.Result); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(sql.Result)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, interface{}) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// NamedExecContext provides a mock function with given fields: _a0, _a1, _a2
+func (_m *DB) NamedExecContext(_a0 context.Context, _a1 string, _a2 interface{}) (sql.Result, error) {
+	ret := _m.Called(_a0, _a1, _a2)
+
+	var r0 sql.Result
+	if rf, ok := ret.Get(0).(func(context.Context, string, interface{}) sql.Result); ok {
+		r0 = rf(_a0, _a1, _a2)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(sql.Result)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, interface{}) error); ok {
+		r1 = rf(_a0, _a1, _a2)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// NamedQuery provides a mock function with given fields: _a0, _a1
+func (_m *DB) NamedQuery(_a0 string, _a1 interface{}) (*sqlx.Rows, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *sqlx.Rows
+	if rf, ok := ret.Get(0).(func(string, interface{}) *sqlx.Rows); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sqlx.Rows)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, interface{}) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Prepare provides a mock function with given fields: query
+func (_m *DB) Prepare(query string) (*sql.Stmt, error) {
+	ret := _m.Called(query)
+
+	var r0 *sql.Stmt
+	if rf, ok := ret.Get(0).(func(string) *sql.Stmt); ok {
+		r0 = rf(query)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sql.Stmt)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(query)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // PrepareContext provides a mock function with given fields: ctx, query
 func (_m *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	ret := _m.Called(ctx, query)
@@ -103,6 +293,124 @@ func (_m *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, erro
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, query)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// PrepareNamed provides a mock function with given fields: _a0
+func (_m *DB) PrepareNamed(_a0 string) (*sqlx.NamedStmt, error) {
+	ret := _m.Called(_a0)
+
+	var r0 *sqlx.NamedStmt
+	if rf, ok := ret.Get(0).(func(string) *sqlx.NamedStmt); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sqlx.NamedStmt)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// PrepareNamedContext provides a mock function with given fields: _a0, _a1
+func (_m *DB) PrepareNamedContext(_a0 context.Context, _a1 string) (*sqlx.NamedStmt, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *sqlx.NamedStmt
+	if rf, ok := ret.Get(0).(func(context.Context, string) *sqlx.NamedStmt); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sqlx.NamedStmt)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Preparex provides a mock function with given fields: _a0
+func (_m *DB) Preparex(_a0 string) (*sqlx.Stmt, error) {
+	ret := _m.Called(_a0)
+
+	var r0 *sqlx.Stmt
+	if rf, ok := ret.Get(0).(func(string) *sqlx.Stmt); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sqlx.Stmt)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// PreparexContext provides a mock function with given fields: _a0, _a1
+func (_m *DB) PreparexContext(_a0 context.Context, _a1 string) (*sqlx.Stmt, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *sqlx.Stmt
+	if rf, ok := ret.Get(0).(func(context.Context, string) *sqlx.Stmt); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sqlx.Stmt)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Query provides a mock function with given fields: query, args
+func (_m *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	var _ca []interface{}
+	_ca = append(_ca, query)
+	_ca = append(_ca, args...)
+	ret := _m.Called(_ca...)
+
+	var r0 *sql.Rows
+	if rf, ok := ret.Get(0).(func(string, ...interface{}) *sql.Rows); ok {
+		r0 = rf(query, args...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sql.Rows)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, ...interface{}) error); ok {
+		r1 = rf(query, args...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -136,6 +444,63 @@ func (_m *DB) QueryContext(ctx context.Context, query string, args ...interface{
 	return r0, r1
 }
 
+// QueryRow provides a mock function with given fields: _a0, _a1
+func (_m *DB) QueryRow(_a0 string, _a1 ...interface{}) *sql.Row {
+	var _ca []interface{}
+	_ca = append(_ca, _a0)
+	_ca = append(_ca, _a1...)
+	ret := _m.Called(_ca...)
+
+	var r0 *sql.Row
+	if rf, ok := ret.Get(0).(func(string, ...interface{}) *sql.Row); ok {
+		r0 = rf(_a0, _a1...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sql.Row)
+		}
+	}
+
+	return r0
+}
+
+// QueryRowContext provides a mock function with given fields: _a0, _a1, _a2
+func (_m *DB) QueryRowContext(_a0 context.Context, _a1 string, _a2 ...interface{}) *sql.Row {
+	var _ca []interface{}
+	_ca = append(_ca, _a0, _a1)
+	_ca = append(_ca, _a2...)
+	ret := _m.Called(_ca...)
+
+	var r0 *sql.Row
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...interface{}) *sql.Row); ok {
+		r0 = rf(_a0, _a1, _a2...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sql.Row)
+		}
+	}
+
+	return r0
+}
+
+// QueryRowx provides a mock function with given fields: query, args
+func (_m *DB) QueryRowx(query string, args ...interface{}) *sqlx.Row {
+	var _ca []interface{}
+	_ca = append(_ca, query)
+	_ca = append(_ca, args...)
+	ret := _m.Called(_ca...)
+
+	var r0 *sqlx.Row
+	if rf, ok := ret.Get(0).(func(string, ...interface{}) *sqlx.Row); ok {
+		r0 = rf(query, args...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sqlx.Row)
+		}
+	}
+
+	return r0
+}
+
 // QueryRowxContext provides a mock function with given fields: ctx, query, args
 func (_m *DB) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
 	var _ca []interface{}
@@ -153,6 +518,32 @@ func (_m *DB) QueryRowxContext(ctx context.Context, query string, args ...interf
 	}
 
 	return r0
+}
+
+// Queryx provides a mock function with given fields: query, args
+func (_m *DB) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
+	var _ca []interface{}
+	_ca = append(_ca, query)
+	_ca = append(_ca, args...)
+	ret := _m.Called(_ca...)
+
+	var r0 *sqlx.Rows
+	if rf, ok := ret.Get(0).(func(string, ...interface{}) *sqlx.Rows); ok {
+		r0 = rf(query, args...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*sqlx.Rows)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, ...interface{}) error); ok {
+		r1 = rf(query, args...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // QueryxContext provides a mock function with given fields: ctx, query, args
@@ -190,6 +581,40 @@ func (_m *DB) Rebind(_a0 string) string {
 		r0 = rf(_a0)
 	} else {
 		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// Select provides a mock function with given fields: _a0, _a1, _a2
+func (_m *DB) Select(_a0 interface{}, _a1 string, _a2 ...interface{}) error {
+	var _ca []interface{}
+	_ca = append(_ca, _a0, _a1)
+	_ca = append(_ca, _a2...)
+	ret := _m.Called(_ca...)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(interface{}, string, ...interface{}) error); ok {
+		r0 = rf(_a0, _a1, _a2...)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SelectContext provides a mock function with given fields: _a0, _a1, _a2, _a3
+func (_m *DB) SelectContext(_a0 context.Context, _a1 interface{}, _a2 string, _a3 ...interface{}) error {
+	var _ca []interface{}
+	_ca = append(_ca, _a0, _a1, _a2)
+	_ca = append(_ca, _a3...)
+	ret := _m.Called(_ca...)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}, string, ...interface{}) error); ok {
+		r0 = rf(_a0, _a1, _a2, _a3...)
+	} else {
+		r0 = ret.Error(0)
 	}
 
 	return r0

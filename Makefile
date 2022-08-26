@@ -14,8 +14,9 @@ develop:
 	go run main.go serve
 
 mock: format
-	rm -rf mocks
+	rm -rf internal/mocks
 	mockery --all --keeptree --dir internal --output internal/mocks
+	rm -rf mocks
 	mockery --all --output mocks/google.golang.org/grpc/grpclog --srcpkg google.golang.org/grpc/grpclog
 
 format:

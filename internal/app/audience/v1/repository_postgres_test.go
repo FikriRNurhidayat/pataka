@@ -7,17 +7,22 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/fikrirnurhidayat/ffgo/internal/app/audience/v1"
 	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
+	"github.com/fikrirnurhidayat/ffgo/internal/driver"
 	mdriver "github.com/fikrirnurhidayat/ffgo/internal/mocks/driver"
-	mgrpclog "github.com/fikrirnurhidayat/ffgo/mocks/google.golang.org/grpc/grpclog"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
+	mgrpclog "github.com/fikrirnurhidayat/ffgo/mocks/google.golang.org/grpc/grpclog"
 )
 
 type MockPostgresRepository struct {
-	DB     *mdriver.DB
-	Logger *mgrpclog.LoggerV2
+	dbmock sqlmock.Sqlmock
+	db     driver.DB
+	logger *mgrpclog.LoggerV2
 }
 
 func TestPostgresRepository_Save(t *testing.T) {
@@ -53,7 +58,8 @@ func TestPostgresRepository_Save(t *testing.T) {
 				err: fmt.Errorf("sqlx.bindNamedMapper: unsupported map type: %T", ""),
 			},
 			on: func(mpr *MockPostgresRepository, i *input, o *output) {
-				args := map[string]interface{}{
+				mdb := &mdriver.DB{}
+				mdb.On("BindNamed", audience.SAVE_SQL, map[string]interface{}{
 					"feature_name": i.audience.FeatureName,
 					"audience_id":  i.audience.AudienceId,
 					"enabled":      i.audience.Enabled,
@@ -63,19 +69,39 @@ func TestPostgresRepository_Save(t *testing.T) {
 						Time:  time.Time{},
 						Valid: false,
 					},
-				}
+				}).Return("", []interface{}{}, o.err)
 
-				mpr.DB.On("BindNamed", audience.SAVE_SQL, args).Return("", []interface{}{}, o.err)
+				mpr.db = mdb
 			},
 		},
 		{
-			name: "EnabledAt is not zero and binding failed",
+			name: "EnabledAt is zero and prepare statement failed",
 			in: &input{
 				ctx: context.Background(),
 				audience: &domain.Audience{
 					FeatureName: "ios/in-app-payment",
 					AudienceId:  "a044ec0f-d04b-49d3-b211-80719a6ccd49",
-					Enabled:     true,
+					Enabled:     false,
+					CreatedAt:   time.Now(),
+					UpdatedAt:   time.Now(),
+					EnabledAt:   time.Time{},
+				},
+			},
+			out: &output{
+				err: fmt.Errorf("sqlx.bindNamedMapper: unsupported map type: %T", ""),
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.ExpectPrepare("INSERT INTO").WillReturnError(o.err)
+			},
+		},
+		{
+			name: "EnabledAt is not zero and prepare statement failed",
+			in: &input{
+				ctx: context.Background(),
+				audience: &domain.Audience{
+					FeatureName: "ios/in-app-payment",
+					AudienceId:  "a044ec0f-d04b-49d3-b211-80719a6ccd49",
+					Enabled:     false,
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 					EnabledAt:   time.Now(),
@@ -85,70 +111,74 @@ func TestPostgresRepository_Save(t *testing.T) {
 				err: fmt.Errorf("sqlx.bindNamedMapper: unsupported map type: %T", ""),
 			},
 			on: func(mpr *MockPostgresRepository, i *input, o *output) {
-				args := map[string]interface{}{
-					"feature_name": i.audience.FeatureName,
-					"audience_id":  i.audience.AudienceId,
-					"enabled":      i.audience.Enabled,
-					"created_at":   i.audience.CreatedAt,
-					"updated_at":   i.audience.UpdatedAt,
-					"enabled_at": sql.NullTime{
-						Time:  i.audience.EnabledAt,
-						Valid: true,
-					},
-				}
-
-				mpr.DB.On("BindNamed", audience.SAVE_SQL, args).Return("", []interface{}{}, o.err)
+				mpr.dbmock.ExpectPrepare("INSERT INTO").WillReturnError(o.err)
 			},
 		},
 		{
-			name: "Prepare statement failed",
+			name: "Failed to exec statement",
 			in: &input{
 				ctx: context.Background(),
 				audience: &domain.Audience{
 					FeatureName: "ios/in-app-payment",
 					AudienceId:  "a044ec0f-d04b-49d3-b211-80719a6ccd49",
-					Enabled:     true,
+					Enabled:     false,
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
 					EnabledAt:   time.Now(),
 				},
 			},
 			out: &output{
-				err: fmt.Errorf("sql: database is closed"),
+				err: fmt.Errorf("sql.exec: failed to execute statement"),
 			},
 			on: func(mpr *MockPostgresRepository, i *input, o *output) {
-				args := map[string]interface{}{
-					"feature_name": i.audience.FeatureName,
-					"audience_id":  i.audience.AudienceId,
-					"enabled":      i.audience.Enabled,
-					"created_at":   i.audience.CreatedAt,
-					"updated_at":   i.audience.UpdatedAt,
-					"enabled_at": sql.NullTime{
-						Time:  i.audience.EnabledAt,
-						Valid: true,
-					},
-				}
-
-				mpr.DB.On("BindNamed", audience.SAVE_SQL, args).Return("", []interface{}{}, nil)
+				mpr.dbmock.ExpectPrepare("INSERT INTO feature_audiences").ExpectExec().WillReturnError(o.err)
+			},
+		},
+		{
+			name: "OK",
+			in: &input{
+				ctx: context.Background(),
+				audience: &domain.Audience{
+					FeatureName: "ios/in-app-payment",
+					AudienceId:  "a044ec0f-d04b-49d3-b211-80719a6ccd49",
+					Enabled:     false,
+					CreatedAt:   time.Now(),
+					UpdatedAt:   time.Now(),
+					EnabledAt:   time.Now(),
+				},
+			},
+			out: &output{
+				err: nil,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.ExpectPrepare("INSERT INTO feature_audiences").ExpectExec().WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			m := &MockPostgresRepository{
-				DB:     &mdriver.DB{},
-				Logger: &mgrpclog.LoggerV2{},
+			db, sqlmock, err := sqlmock.New()
+			if err != nil {
+				t.Fatal(err)
 			}
 
-			m.Logger.On("Errorf", mock.AnythingOfType("string"), mock.Anything)
+			defer db.Close()
+
+			dbx := sqlx.NewDb(db, "sqlmock")
+
+			m := &MockPostgresRepository{
+				dbmock: sqlmock,
+				db:     dbx,
+				logger: &mgrpclog.LoggerV2{},
+			}
+
+			m.logger.On("Errorf", mock.AnythingOfType("string"), mock.Anything)
 
 			if tt.on != nil {
 				tt.on(m, tt.in, tt.out)
 			}
 
-			subject := audience.NewPostgresRepository(m.DB, m.Logger)
-			err := subject.Save(tt.in.ctx, tt.in.audience)
+			subject := audience.NewPostgresRepository(m.db, m.logger)
+			err = subject.Save(tt.in.ctx, tt.in.audience)
 
 			if tt.out.err != nil {
 				assert.Error(t, err)

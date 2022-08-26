@@ -3,6 +3,7 @@ module github.com/fikrirnurhidayat/ffgo
 go 1.18
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2
 	github.com/jmoiron/sqlx v1.3.5
