@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -25,7 +26,9 @@ type MockPostgresRepository struct {
 	logger *mgrpclog.LoggerV2
 }
 
-func TestPostgresRepository_Save(t *testing.T) {
+var AudiencePostgresRepositoryCols []string = []string{"feature_name", "audience_id", "enabled", "created_at", "updated_at", "enabled_at"}
+
+func TestAudiencePostgresRepository_Save(t *testing.T) {
 	type input struct {
 		ctx      context.Context
 		audience *domain.Audience
@@ -189,7 +192,7 @@ func TestPostgresRepository_Save(t *testing.T) {
 	}
 }
 
-func TestPostgresRepository_List(t *testing.T) {
+func TestAudiencePostgresRepository_List(t *testing.T) {
 	type input struct {
 		ctx  context.Context
 		args *domain.AudienceListArgs
@@ -338,7 +341,7 @@ func TestPostgresRepository_List(t *testing.T) {
 
 				o.err = fmt.Errorf(errStr, weirdCol, weirdCol)
 
-				rows := sqlmock.NewRows([]string{"feature_name", "audience_id", "enabled", "created_at", "updated_at", "enabled_at"}).
+				rows := sqlmock.NewRows(AudiencePostgresRepositoryCols).
 					AddRow("midtrans-payment", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", weirdCol, time.Now(), time.Now(), sql.NullTime{
 						Time:  time.Now(),
 						Valid: true,
@@ -374,7 +377,7 @@ func TestPostgresRepository_List(t *testing.T) {
 				err: nil,
 			},
 			on: func(mpr *MockPostgresRepository, i *input, o *output) {
-				rows := sqlmock.NewRows([]string{"feature_name", "audience_id", "enabled", "created_at", "updated_at", "enabled_at"})
+				rows := sqlmock.NewRows(AudiencePostgresRepositoryCols)
 
 				for _, a := range o.audiences {
 					rows.AddRow(a.FeatureName, a.AudienceId, a.Enabled, a.CreatedAt, a.UpdatedAt, sql.NullTime{
@@ -415,17 +418,21 @@ func TestPostgresRepository_List(t *testing.T) {
 			if tt.out.err != nil {
 				assert.Error(t, err)
 				assert.Equal(t, tt.out.err.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
 			}
 
 			if tt.out.audiences != nil {
 				assert.NotNil(t, audiences)
 				assert.Equal(t, tt.out.audiences, audiences)
+			} else {
+				assert.Nil(t, audiences)
 			}
 		})
 	}
 }
 
-func TestPostgresRepository_Get(t *testing.T) {
+func TestAudiencePostgresRepository_Get(t *testing.T) {
 	type input struct {
 		ctx context.Context
 		fn  string
@@ -487,7 +494,7 @@ func TestPostgresRepository_Get(t *testing.T) {
 
 				o.err = fmt.Errorf(errStr, weirdCol, weirdCol)
 
-				rows := sqlmock.NewRows([]string{"feature_name", "audience_id", "enabled", "created_at", "updated_at", "enabled_at"}).
+				rows := sqlmock.NewRows(AudiencePostgresRepositoryCols).
 					AddRow("midtrans-payment", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", weirdCol, time.Now(), time.Now(), sql.NullTime{
 						Time:  time.Now(),
 						Valid: true,
@@ -515,14 +522,17 @@ func TestPostgresRepository_Get(t *testing.T) {
 				err: nil,
 			},
 			on: func(mpr *MockPostgresRepository, i *input, o *output) {
-				rows := sqlmock.NewRows([]string{"feature_name", "audience_id", "enabled", "created_at", "updated_at", "enabled_at"})
+				rows := sqlmock.NewRows(AudiencePostgresRepositoryCols)
 
 				rows.AddRow(o.audience.FeatureName, o.audience.AudienceId, o.audience.Enabled, o.audience.CreatedAt, o.audience.UpdatedAt, sql.NullTime{
 					Time:  o.audience.EnabledAt,
 					Valid: true,
 				})
 
-				mpr.dbmock.ExpectPrepare("SELECT feature_audiences.feature_name, feature_audiences.audience_id, feature_audiences.enabled, feature_audiences.created_at, feature_audiences.updated_at, feature_audiences.enabled_at FROM feature_audiences").ExpectQuery().WillReturnRows(rows)
+				mpr.dbmock.
+					ExpectPrepare("SELECT feature_audiences.feature_name, feature_audiences.audience_id, feature_audiences.enabled, feature_audiences.created_at, feature_audiences.updated_at, feature_audiences.enabled_at FROM feature_audiences").
+					ExpectQuery().
+					WillReturnRows(rows)
 			},
 		},
 	} {
@@ -569,13 +579,628 @@ func TestPostgresRepository_Get(t *testing.T) {
 }
 
 func TestPostgresRepository_GetBy(t *testing.T) {
-	t.SkipNow()
+	type input struct {
+		ctx  context.Context
+		args *domain.AudienceGetByArgs
+	}
+
+	type output struct {
+		audience *domain.Audience
+		err      error
+	}
+
+	for _, tt := range []struct {
+		name string
+		in   *input
+		out  *output
+		on   func(*MockPostgresRepository, *input, *output)
+	}{
+		{
+			name: "Failed to bind statement during filtering",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceGetByArgs{
+					Sort: "-created_at",
+					Filter: &domain.AudienceFilterArgs{
+						FeatureName: "midtrans-payment-",
+						AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+						Enabled:     new(bool),
+					},
+				},
+			},
+			out: &output{
+				audience: nil,
+				err:      fmt.Errorf("sqlx.bindNamedMapper: failed to bind argumnets"),
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mdb := &mdriver.DB{}
+				mdb.On("BindNamed", "(feature_audiences.enabled = :enabled) AND (feature_audiences.feature_name = :feature_name) AND (feature_audiences.audience_id IN (:audience_id))", *i.args.Filter).Return("", []interface{}{}, o.err)
+
+				mpr.db = mdb
+			},
+		},
+		{
+			name: "Filter and sort but failed to prepare statement",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceGetByArgs{
+					Sort: "-created_at",
+					Filter: &domain.AudienceFilterArgs{
+						FeatureName: "midtrans-payment-",
+						AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+						Enabled:     new(bool),
+					},
+				},
+			},
+			out: &output{
+				audience: nil,
+				err:      sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.
+					ExpectPrepare("SELECT feature_audiences.feature_name, feature_audiences.audience_id, feature_audiences.enabled, feature_audiences.created_at, feature_audiences.updated_at, feature_audiences.enabled_at FROM feature_audiences").
+					WillReturnError(o.err)
+			},
+		},
+		{
+			name: "Statement prepared but query failed",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceGetByArgs{
+					Sort: "-created_at",
+					Filter: &domain.AudienceFilterArgs{
+						FeatureName: "midtrans-payment-",
+						AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+						Enabled:     new(bool),
+					},
+				},
+			},
+			out: &output{
+				audience: nil,
+				err:      sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.
+					ExpectPrepare("SELECT feature_audiences.feature_name, feature_audiences.audience_id, feature_audiences.enabled, feature_audiences.created_at, feature_audiences.updated_at, feature_audiences.enabled_at FROM feature_audiences").
+					ExpectQuery().
+					WithArgs(i.args.Filter.Enabled, i.args.Filter.FeatureName, i.args.Filter.AudienceIds[0], i.args.Filter.AudienceIds[1], 1, 0).
+					WillReturnError(o.err)
+			},
+		},
+		{
+			name: "Query ok but scan failed",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceGetByArgs{
+					Sort: "-created_at",
+					Filter: &domain.AudienceFilterArgs{
+						FeatureName: "midtrans-payment-",
+						AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+						Enabled:     new(bool),
+					},
+				},
+			},
+			out: &output{},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				errStr := "sql: Scan error on column index 2, name \"enabled\": sql/driver: couldn't convert %v (%T) into type bool"
+				weirdCol := time.Now()
+
+				o.err = fmt.Errorf(errStr, weirdCol, weirdCol)
+
+				rows := sqlmock.NewRows(AudiencePostgresRepositoryCols).
+					AddRow("midtrans-payment", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", weirdCol, time.Now(), time.Now(), sql.NullTime{
+						Time:  time.Now(),
+						Valid: true,
+					})
+
+				mpr.dbmock.
+					ExpectPrepare("SELECT feature_audiences.feature_name, feature_audiences.audience_id, feature_audiences.enabled, feature_audiences.created_at, feature_audiences.updated_at, feature_audiences.enabled_at FROM feature_audiences").
+					ExpectQuery().
+					WithArgs(i.args.Filter.Enabled, i.args.Filter.FeatureName, i.args.Filter.AudienceIds[0], i.args.Filter.AudienceIds[1], 1, 0).
+					WillReturnRows(rows)
+			},
+		},
+		{
+			name: "OK",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceGetByArgs{
+					Sort: "-created_at",
+					Filter: &domain.AudienceFilterArgs{
+						FeatureName: "midtrans-payment-",
+						AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+						Enabled:     new(bool),
+					},
+				},
+			},
+			out: &output{
+				audience: &domain.Audience{
+					FeatureName: "midtrans-payment",
+					AudienceId:  "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0",
+					Enabled:     true,
+					CreatedAt:   time.Now(),
+					UpdatedAt:   time.Now(),
+					EnabledAt:   time.Now(),
+				},
+				err: nil,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				rows := sqlmock.NewRows(AudiencePostgresRepositoryCols)
+
+				rows.AddRow(o.audience.FeatureName, o.audience.AudienceId, o.audience.Enabled, o.audience.CreatedAt, o.audience.UpdatedAt, sql.NullTime{
+					Time:  o.audience.EnabledAt,
+					Valid: true,
+				})
+
+				mpr.dbmock.
+					ExpectPrepare("SELECT feature_audiences.feature_name, feature_audiences.audience_id, feature_audiences.enabled, feature_audiences.created_at, feature_audiences.updated_at, feature_audiences.enabled_at FROM feature_audiences").
+					ExpectQuery().
+					WithArgs(i.args.Filter.Enabled, i.args.Filter.FeatureName, i.args.Filter.AudienceIds[0], i.args.Filter.AudienceIds[1], 1, 0).
+					WillReturnRows(rows)
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			db, sqlmock, err := sqlmock.New()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer db.Close()
+
+			dbx := sqlx.NewDb(db, "sqlmock")
+
+			m := &MockPostgresRepository{
+				dbmock: sqlmock,
+				db:     dbx,
+				logger: &mgrpclog.LoggerV2{},
+			}
+
+			m.logger.On("Errorf", mock.AnythingOfType("string"), mock.Anything)
+
+			if tt.on != nil {
+				tt.on(m, tt.in, tt.out)
+			}
+
+			subject := audience.NewPostgresRepository(m.db, m.logger)
+			audience, err := subject.GetBy(tt.in.ctx, tt.in.args)
+
+			if tt.out.err != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tt.out.err.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+
+			if tt.out.audience != nil {
+				assert.NotNil(t, audience)
+				assert.Equal(t, tt.out.audience, audience)
+			} else {
+				assert.Nil(t, audience)
+			}
+		})
+	}
 }
 
-func TestPostgresRepository_Delete(t *testing.T) {
-	t.SkipNow()
+func TestAudiencePostgresRepository_Delete(t *testing.T) {
+	type input struct {
+		ctx      context.Context
+		audience *domain.Audience
+	}
+
+	type output struct {
+		err error
+	}
+
+	for _, tt := range []struct {
+		name string
+		in   *input
+		out  *output
+		on   func(*MockPostgresRepository, *input, *output)
+	}{
+		{
+			name: "Failed to prepare statement",
+			in: &input{
+				ctx: context.Background(),
+				audience: &domain.Audience{
+					FeatureName: "midtrans-payment",
+					AudienceId:  "f554c37a-3ed7-4d31-bc88-c2f4dbbf9ed5",
+					Enabled:     true,
+					CreatedAt:   time.Now(),
+					UpdatedAt:   time.Now(),
+					EnabledAt:   time.Now(),
+				},
+			},
+			out: &output{
+				err: sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.ExpectPrepare("DELETE FROM feature_audiences").WillReturnError(o.err)
+			},
+		},
+		{
+			name: "Failed to execute statement",
+			in: &input{
+				ctx: context.Background(),
+				audience: &domain.Audience{
+					FeatureName: "midtrans-payment",
+					AudienceId:  "f554c37a-3ed7-4d31-bc88-c2f4dbbf9ed5",
+					Enabled:     true,
+					CreatedAt:   time.Now(),
+					UpdatedAt:   time.Now(),
+					EnabledAt:   time.Now(),
+				},
+			},
+			out: &output{
+				err: sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.
+					ExpectPrepare("DELETE FROM feature_audiences").
+					ExpectExec().
+					WithArgs(i.audience.FeatureName, i.audience.AudienceId).
+					WillReturnError(o.err)
+			},
+		},
+		{
+			name: "OK",
+			in: &input{
+				ctx: context.Background(),
+				audience: &domain.Audience{
+					FeatureName: "midtrans-payment",
+					AudienceId:  "f554c37a-3ed7-4d31-bc88-c2f4dbbf9ed5",
+					Enabled:     true,
+					CreatedAt:   time.Now(),
+					UpdatedAt:   time.Now(),
+					EnabledAt:   time.Now(),
+				},
+			},
+			out: &output{
+				err: nil,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.
+					ExpectPrepare("DELETE FROM feature_audiences").
+					ExpectExec().
+					WithArgs(i.audience.FeatureName, i.audience.AudienceId).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			db, sqlmock, err := sqlmock.New()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer db.Close()
+
+			dbx := sqlx.NewDb(db, "sqlmock")
+
+			m := &MockPostgresRepository{
+				dbmock: sqlmock,
+				db:     dbx,
+				logger: &mgrpclog.LoggerV2{},
+			}
+
+			m.logger.On("Errorf", mock.AnythingOfType("string"), mock.Anything)
+
+			if tt.on != nil {
+				tt.on(m, tt.in, tt.out)
+			}
+
+			subject := audience.NewPostgresRepository(m.db, m.logger)
+			err = subject.Delete(tt.in.ctx, tt.in.audience)
+
+			if tt.out.err != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tt.out.err.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestPostgresRepository_Size(t *testing.T) {
+	type input struct {
+		ctx  context.Context
+		args *domain.AudienceFilterArgs
+	}
+
+	type output struct {
+		size uint32
+		err  error
+	}
+
+	for _, tt := range []struct {
+		name string
+		in   *input
+		out  *output
+		on   func(*MockPostgresRepository, *input, *output)
+	}{
+		{
+			name: "Failed to bind statement during filtering",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceFilterArgs{
+					FeatureName: "midtrans-payment-",
+					AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+					Enabled:     new(bool),
+				},
+			},
+			out: &output{
+				size: 0,
+				err:  fmt.Errorf("sqlx.bindNamedMapper: failed to bind argumnets"),
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mdb := &mdriver.DB{}
+				mdb.On("BindNamed", "(feature_audiences.enabled = :enabled) AND (feature_audiences.feature_name = :feature_name) AND (feature_audiences.audience_id IN (:audience_id))", *i.args).Return("", []interface{}{}, o.err)
+
+				mpr.db = mdb
+			},
+		},
+		{
+			name: "Filter but failed to prepare statement",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceFilterArgs{
+					FeatureName: "midtrans-payment-",
+					AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+					Enabled:     new(bool),
+				},
+			},
+			out: &output{
+				size: 0,
+				err:  sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.
+					ExpectPrepare(regexp.QuoteMeta(audience.SIZE_SQL)).
+					WillReturnError(o.err)
+			},
+		},
+		{
+			name: "Statement prepared but execution failed",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceFilterArgs{
+					FeatureName: "midtrans-payment",
+					AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+					Enabled:     new(bool),
+				},
+			},
+			out: &output{
+				size: 0,
+				err:  sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.
+					ExpectPrepare(regexp.QuoteMeta(audience.SIZE_SQL)).
+					ExpectQuery().
+					WithArgs(i.args.Enabled, i.args.FeatureName, i.args.AudienceIds[0], i.args.AudienceIds[1]).
+					WillReturnError(o.err)
+			},
+		},
+		{
+			name: "Execution is ok but scan failed",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceFilterArgs{
+					FeatureName: "midtrans-payment-",
+					AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+					Enabled:     new(bool),
+				},
+			},
+			out: &output{
+				size: 0,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				o.err = fmt.Errorf("sql: Scan error on column index 0, name \"count\": converting driver.Value type bool (\"true\") to a int: invalid syntax")
+				rows := sqlmock.NewRows([]string{"count"}).AddRow(true)
+
+				mpr.dbmock.
+					ExpectPrepare(regexp.QuoteMeta(audience.SIZE_SQL)).
+					ExpectQuery().
+					WithArgs(i.args.Enabled, i.args.FeatureName, i.args.AudienceIds[0], i.args.AudienceIds[1]).
+					WillReturnRows(rows)
+			},
+		},
+		{
+			name: "OK",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceFilterArgs{
+					FeatureName: "midtrans-payment-",
+					AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+					Enabled:     new(bool),
+				},
+			},
+			out: &output{
+				size: 2,
+				err:  nil,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				rows := sqlmock.NewRows([]string{"count"}).
+					AddRow(2)
+
+				mpr.dbmock.
+					ExpectPrepare(regexp.QuoteMeta(audience.SIZE_SQL)).
+					ExpectQuery().
+					WithArgs(i.args.Enabled, i.args.FeatureName, i.args.AudienceIds[0], i.args.AudienceIds[1]).
+					WillReturnRows(rows)
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			db, sqlmock, err := sqlmock.New()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer db.Close()
+
+			dbx := sqlx.NewDb(db, "sqlmock")
+
+			m := &MockPostgresRepository{
+				dbmock: sqlmock,
+				db:     dbx,
+				logger: &mgrpclog.LoggerV2{},
+			}
+
+			m.logger.On("Errorf", mock.AnythingOfType("string"), mock.Anything)
+
+			if tt.on != nil {
+				tt.on(m, tt.in, tt.out)
+			}
+
+			subject := audience.NewPostgresRepository(m.db, m.logger)
+			size, err := subject.Size(tt.in.ctx, tt.in.args)
+
+			if tt.out.err != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tt.out.err.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+
+			if tt.out.size != 0 {
+				assert.NotZero(t, size)
+				assert.Equal(t, tt.out.size, size)
+			}
+		})
+	}
 }
 
 func TestPostgresRepository_DeleteBy(t *testing.T) {
-	t.SkipNow()
+	type input struct {
+		ctx  context.Context
+		args *domain.AudienceFilterArgs
+	}
+
+	type output struct {
+		err error
+	}
+
+	for _, tt := range []struct {
+		name string
+		in   *input
+		out  *output
+		on   func(*MockPostgresRepository, *input, *output)
+	}{
+		{
+			name: "Failed to bind statement during filtering",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceFilterArgs{
+					FeatureName: "midtrans-payment-",
+					AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+					Enabled:     new(bool),
+				},
+			},
+			out: &output{
+				err: fmt.Errorf("sqlx.bindNamedMapper: failed to bind argumnets"),
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mdb := &mdriver.DB{}
+				mdb.On("BindNamed", "(feature_audiences.enabled = :enabled) AND (feature_audiences.feature_name = :feature_name) AND (feature_audiences.audience_id IN (:audience_id))", *i.args).Return("", []interface{}{}, o.err)
+
+				mpr.db = mdb
+			},
+		},
+		{
+			name: "Filter but failed to prepare statement",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceFilterArgs{
+					FeatureName: "midtrans-payment-",
+					AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+					Enabled:     new(bool),
+				},
+			},
+			out: &output{
+				err: sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.
+					ExpectPrepare("DELETE FROM feature_audiences").
+					WillReturnError(o.err)
+			},
+		},
+		{
+			name: "Statement prepared but execution failed",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceFilterArgs{
+					FeatureName: "midtrans-payment-",
+					AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+					Enabled:     new(bool),
+				},
+			},
+			out: &output{
+				err: sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.
+					ExpectPrepare(audience.DELETE_BY_SQL).
+					ExpectExec().
+					WithArgs(i.args.Enabled, i.args.FeatureName, i.args.AudienceIds[0], i.args.AudienceIds[1]).
+					WillReturnError(o.err)
+			},
+		},
+		{
+			name: "OK",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceFilterArgs{
+					FeatureName: "midtrans-payment-",
+					AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+					Enabled:     new(bool),
+				},
+			},
+			out: &output{
+				err: nil,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.
+					ExpectPrepare(audience.DELETE_BY_SQL).
+					ExpectExec().
+					WithArgs(i.args.Enabled, i.args.FeatureName, i.args.AudienceIds[0], i.args.AudienceIds[1]).
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			db, sqlmock, err := sqlmock.New()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer db.Close()
+
+			dbx := sqlx.NewDb(db, "sqlmock")
+
+			m := &MockPostgresRepository{
+				dbmock: sqlmock,
+				db:     dbx,
+				logger: &mgrpclog.LoggerV2{},
+			}
+
+			m.logger.On("Errorf", mock.AnythingOfType("string"), mock.Anything)
+
+			if tt.on != nil {
+				tt.on(m, tt.in, tt.out)
+			}
+
+			subject := audience.NewPostgresRepository(m.db, m.logger)
+			err = subject.DeleteBy(tt.in.ctx, tt.in.args)
+
+			if tt.out.err != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tt.out.err.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
