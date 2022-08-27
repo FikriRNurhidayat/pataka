@@ -5,7 +5,7 @@ import (
 )
 
 type AudienceRepository interface {
-	Get(ctx context.Context, fn string, ui string) (*Audience, error)
+	Get(ctx context.Context, featureName string, audienceId string) (*Audience, error)
 	GetBy(ctx context.Context, args *AudienceGetByArgs) (*Audience, error)
 	List(context.Context, *AudienceListArgs) ([]Audience, error)
 	Size(context.Context, *AudienceFilterArgs) (uint32, error)
