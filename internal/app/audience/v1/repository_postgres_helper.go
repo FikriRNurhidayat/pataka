@@ -19,7 +19,7 @@ func (r *PostgresAudienceRepository) Filter(filter domain.AudienceFilterArgs) (q
 		queries = append(queries, "(feature_audiences.enabled = :enabled)")
 	}
 
-	if inspector.IsEmpty(filter.FeatureName) {
+	if !inspector.IsEmpty(filter.FeatureName) {
 		queries = append(queries, "(feature_audiences.feature_name = :feature_name)")
 	}
 
@@ -28,7 +28,12 @@ func (r *PostgresAudienceRepository) Filter(filter domain.AudienceFilterArgs) (q
 	}
 
 	query = strings.Join(queries, " AND ")
-	query, args, _ = sqlx.Named(query, filter)
+	query, args, err = r.BindNamed(query, filter)
+	if err != nil {
+		r.logger.Errorf("[postgres-audience-repository] failed to bind named parameter: %s", err.Error())
+		return query, args, err
+	}
+
 	query, args, _ = sqlx.In(query, args...)
 
 	return query, args, nil

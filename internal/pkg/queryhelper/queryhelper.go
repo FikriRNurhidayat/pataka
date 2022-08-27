@@ -8,7 +8,7 @@ import (
 // Build the Sort Statement for List Features
 // It will dynamically append the SQL string
 // based on the argument being passed
-func Sort(sortStr string, allowedCols map[string]string) (query string, err error) {
+func Sort(sortStr string, allowedCols map[string]string) (query string) {
 	sorts := strings.Split(strings.ReplaceAll(string(sortStr), " ", ""), ",")
 	stmts := []string{}
 	for _, sortExpr := range sorts {
@@ -25,12 +25,12 @@ func Sort(sortStr string, allowedCols map[string]string) (query string, err erro
 	}
 
 	if len(stmts) == 0 {
-		return "", nil
+		return ""
 	}
 
 	query = fmt.Sprintf("ORDER BY %s", strings.Join(stmts, ", "))
 
-	return query, nil
+	return query
 }
 
 // Build the Pagination Statement for List Features

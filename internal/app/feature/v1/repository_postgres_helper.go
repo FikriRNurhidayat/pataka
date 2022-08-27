@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
-	"github.com/jmoiron/sqlx"
 )
 
 // Build the Filter Statement for List Features
@@ -33,7 +32,7 @@ func (r *PostgresFeatureRepository) Filter(filter domain.FeatureFilterArgs) (que
 	}
 
 	query = strings.Join(queries, " AND ")
-	query, args, err = sqlx.Named(query, filter)
+	query, args, err = r.BindNamed(query, filter)
 	if err != nil {
 		return "", nil, err
 	}

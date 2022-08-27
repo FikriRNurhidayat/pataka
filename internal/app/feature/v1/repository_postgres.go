@@ -83,12 +83,7 @@ func (r *PostgresFeatureRepository) GetBy(ctx context.Context, args *domain.Feat
 	}
 
 	if args.Sort != "" {
-		sortQuery, err := queryhelper.Sort(args.Sort, SortMap)
-		if err != nil {
-			r.logger.Errorf("[postgres-feature-repository] failed to build sort list query: %s", err.Error())
-			return nil, err
-		}
-
+		sortQuery := queryhelper.Sort(args.Sort, SortMap)
 		query = fmt.Sprint(query, " ", sortQuery)
 	}
 
@@ -165,12 +160,7 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.Featu
 	}
 
 	if args.Sort != "" {
-		sortQuery, err := queryhelper.Sort(args.Sort, SortMap)
-		if err != nil {
-			r.logger.Errorf("[postgres-feature-repository] failed to build sort list query: %s", err.Error())
-			return features, err
-		}
-
+		sortQuery := queryhelper.Sort(args.Sort, SortMap)
 		query = fmt.Sprint(query, " ", sortQuery)
 	}
 

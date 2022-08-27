@@ -82,12 +82,7 @@ func (r *PostgresAudienceRepository) GetBy(ctx context.Context, args *domain.Aud
 	}
 
 	if args.Sort != "" {
-		sortQuery, err := queryhelper.Sort(args.Sort, SortMap)
-		if err != nil {
-			r.logger.Errorf("[postgres-audience-repository] failed to build sort list query: %s", err.Error())
-			return nil, err
-		}
-
+		sortQuery := queryhelper.Sort(args.Sort, SortMap)
 		query = fmt.Sprint(query, " ", sortQuery)
 	}
 
@@ -164,14 +159,8 @@ func (r *PostgresAudienceRepository) List(ctx context.Context, args *domain.Audi
 		}
 	}
 
-	// Sort if sort argument is specified
-	if !inspector.IsEmpty(args.Sort) {
-		sortQuery, err := queryhelper.Sort(args.Sort, SortMap)
-		if err != nil {
-			r.logger.Errorf("[postgres-audience-repository] failed to build sort list query: %s", err.Error())
-			return audiences, err
-		}
-
+	if args.Sort != "" {
+		sortQuery := queryhelper.Sort(args.Sort, SortMap)
 		query = fmt.Sprint(query, " ", sortQuery)
 	}
 

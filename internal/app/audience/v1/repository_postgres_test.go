@@ -152,6 +152,7 @@ func TestPostgresRepository_Save(t *testing.T) {
 			},
 			on: func(mpr *MockPostgresRepository, i *input, o *output) {
 				mpr.dbmock.ExpectPrepare("INSERT INTO feature_audiences").ExpectExec().WillReturnResult(sqlmock.NewResult(1, 1))
+				mpr.dbmock.ExpectPrepare("INSERT INTO").WillReturnError(o.err)
 			},
 		},
 	} {
@@ -189,7 +190,239 @@ func TestPostgresRepository_Save(t *testing.T) {
 }
 
 func TestPostgresRepository_List(t *testing.T) {
-	t.SkipNow()
+	type input struct {
+		ctx  context.Context
+		args *domain.AudienceListArgs
+	}
+
+	type output struct {
+		audiences []domain.Audience
+		err       error
+	}
+
+	for _, tt := range []struct {
+		name string
+		in   *input
+		out  *output
+		on   func(*MockPostgresRepository, *input, *output)
+	}{
+		{
+			name: "Filter specified and failed",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceListArgs{
+					Limit:  10,
+					Offset: 0,
+					Sort:   "",
+					Filter: &domain.AudienceFilterArgs{},
+				},
+			},
+			out: &output{
+				audiences: nil,
+				err:       fmt.Errorf("sqlx.bindNamedMapper: unsupported map type: %T", ""),
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mdb := &mdriver.DB{}
+				mdb.On("BindNamed", "", *i.args.Filter).Return("", []interface{}{}, o.err)
+
+				mpr.db = mdb
+			},
+		},
+		{
+			name: "Filter specified but empty and failed to prepare statement",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceListArgs{
+					Limit:  10,
+					Offset: 0,
+					Sort:   "",
+					Filter: &domain.AudienceFilterArgs{},
+				},
+			},
+			out: &output{
+				audiences: nil,
+				err:       sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.ExpectPrepare("SELECT feature_audiences.* FROM feature_audiences").WillReturnError(o.err)
+			},
+		},
+		{
+			name: "Filter specified and failed to prepare statement",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceListArgs{
+					Limit:  10,
+					Offset: 0,
+					Sort:   "",
+					Filter: &domain.AudienceFilterArgs{
+						FeatureName: "midtrans-payment",
+						AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+						Enabled:     new(bool),
+					},
+				},
+			},
+			out: &output{
+				audiences: nil,
+				err:       sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.ExpectPrepare("SELECT feature_audiences.* FROM feature_audiences").WillReturnError(o.err)
+			},
+		},
+		{
+			name: "Sort & filter specified and but sort statement failed",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceListArgs{
+					Limit:  10,
+					Offset: 0,
+					Sort:   "-created_at",
+					Filter: &domain.AudienceFilterArgs{
+						FeatureName: "midtrans-payment",
+						AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+						Enabled:     new(bool),
+					},
+				},
+			},
+			out: &output{
+				audiences: nil,
+				err:       sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.ExpectPrepare("SELECT feature_audiences.* FROM feature_audiences").WillReturnError(o.err)
+			},
+		},
+		{
+			name: "Sort & filter specified and failed to query statement",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceListArgs{
+					Limit:  10,
+					Offset: 0,
+					Sort:   "-created_at",
+					Filter: &domain.AudienceFilterArgs{
+						FeatureName: "midtrans-payment",
+						AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+						Enabled:     new(bool),
+					},
+				},
+			},
+			out: &output{
+				audiences: nil,
+				err:       sql.ErrConnDone,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				mpr.dbmock.ExpectPrepare("SELECT feature_audiences.* FROM feature_audiences").ExpectQuery().WillReturnError(o.err)
+			},
+		},
+		{
+			name: "Query executed but scan failed",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceListArgs{
+					Limit:  10,
+					Offset: 0,
+					Sort:   "-created_at",
+					Filter: &domain.AudienceFilterArgs{
+						FeatureName: "midtrans-payment",
+						AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+						Enabled:     new(bool),
+					},
+				},
+			},
+			out: &output{},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				errStr := "sql: Scan error on column index 2, name \"enabled\": sql/driver: couldn't convert %v (%T) into type bool"
+				weirdCol := time.Now()
+
+				o.err = fmt.Errorf(errStr, weirdCol, weirdCol)
+
+				rows := sqlmock.NewRows([]string{"feature_name", "audience_id", "enabled", "created_at", "updated_at", "enabled_at"}).
+					AddRow("midtrans-payment", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", weirdCol, time.Now(), time.Now(), sql.NullTime{
+						Time:  time.Now(),
+						Valid: true,
+					})
+
+				mpr.dbmock.ExpectPrepare("SELECT feature_audiences.* FROM feature_audiences").ExpectQuery().WillReturnRows(rows)
+			},
+		},
+		{
+			name: "OK",
+			in: &input{
+				ctx: context.Background(),
+				args: &domain.AudienceListArgs{
+					Limit:  10,
+					Offset: 0,
+					Sort:   "-created_at",
+					Filter: &domain.AudienceFilterArgs{
+						FeatureName: "midtrans-payment",
+						AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
+						Enabled:     new(bool),
+					},
+				},
+			},
+			out: &output{
+				audiences: []domain.Audience{{
+					FeatureName: "midtrans-payment",
+					AudienceId:  "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0",
+					Enabled:     true,
+					CreatedAt:   time.Now(),
+					UpdatedAt:   time.Now(),
+					EnabledAt:   time.Now(),
+				}},
+				err: nil,
+			},
+			on: func(mpr *MockPostgresRepository, i *input, o *output) {
+				rows := sqlmock.NewRows([]string{"feature_name", "audience_id", "enabled", "created_at", "updated_at", "enabled_at"})
+
+				for _, a := range o.audiences {
+					rows.AddRow(a.FeatureName, a.AudienceId, a.Enabled, a.CreatedAt, a.UpdatedAt, sql.NullTime{
+						Time:  a.EnabledAt,
+						Valid: true,
+					})
+				}
+
+				mpr.dbmock.ExpectPrepare("SELECT feature_audiences.* FROM feature_audiences").ExpectQuery().WillReturnRows(rows)
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			db, sqlmock, err := sqlmock.New()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			defer db.Close()
+
+			dbx := sqlx.NewDb(db, "sqlmock")
+
+			m := &MockPostgresRepository{
+				dbmock: sqlmock,
+				db:     dbx,
+				logger: &mgrpclog.LoggerV2{},
+			}
+
+			m.logger.On("Errorf", mock.AnythingOfType("string"), mock.Anything)
+
+			if tt.on != nil {
+				tt.on(m, tt.in, tt.out)
+			}
+
+			subject := audience.NewPostgresRepository(m.db, m.logger)
+			audiences, err := subject.List(tt.in.ctx, tt.in.args)
+
+			if tt.out.err != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tt.out.err.Error(), err.Error())
+			}
+
+			if tt.out.audiences != nil {
+				assert.NotNil(t, audiences)
+				assert.Equal(t, tt.out.audiences, audiences)
+			}
+		})
+	}
 }
 
 func TestPostgresRepository_Get(t *testing.T) {
