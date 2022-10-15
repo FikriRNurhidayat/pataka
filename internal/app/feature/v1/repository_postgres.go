@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-var SortMap = map[string]string{
+var Sort = map[string]string{
 	"name":               "features.name",
 	"label":              "features.label",
 	"enabled":            "features.enabled",
@@ -83,7 +83,7 @@ func (r *PostgresFeatureRepository) GetBy(ctx context.Context, args *domain.Feat
 	}
 
 	if args.Sort != "" {
-		sortQuery := queryhelper.Sort(args.Sort, SortMap)
+		sortQuery := queryhelper.Sort(args.Sort, Sort)
 		query = fmt.Sprint(query, " ", sortQuery)
 	}
 
@@ -160,7 +160,7 @@ func (r *PostgresFeatureRepository) List(ctx context.Context, args *domain.Featu
 	}
 
 	if args.Sort != "" {
-		sortQuery := queryhelper.Sort(args.Sort, SortMap)
+		sortQuery := queryhelper.Sort(args.Sort, Sort)
 		query = fmt.Sprint(query, " ", sortQuery)
 	}
 

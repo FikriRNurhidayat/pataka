@@ -42,10 +42,7 @@ func (s *DeleteFeatureService) Call(ctx context.Context, params *domain.DeleteFe
 	})
 }
 
-func NewDeleteFeatureService(
-	unitOfWork domain.UnitOfWork,
-	logger grpclog.LoggerV2,
-) domain.FeatureDeletable {
+func NewDeleteFeatureService(unitOfWork domain.UnitOfWork, logger grpclog.LoggerV2) domain.FeatureDeletable {
 	return &DeleteFeatureService{
 		unitOfWork: unitOfWork,
 		logger:     logger,

@@ -28,12 +28,7 @@ func (r *PostgresAudienceRepository) Filter(filter domain.AudienceFilterArgs) (q
 	}
 
 	query = strings.Join(queries, " AND ")
-	query, args, err = r.BindNamed(query, filter)
-	if err != nil {
-		r.logger.Errorf("[postgres-audience-repository] failed to bind named parameter: %s", err.Error())
-		return query, args, err
-	}
-
+	query, args, _ = sqlx.Named(query, filter)
 	query, args, _ = sqlx.In(query, args...)
 
 	return query, args, nil

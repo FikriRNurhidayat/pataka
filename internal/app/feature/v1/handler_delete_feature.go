@@ -8,6 +8,10 @@ import (
 )
 
 func (s *Server) DeleteFeature(ctx context.Context, req *featurev1.DeleteFeatureRequest) (*featurev1.DeleteFeatureResponse, error) {
+	if _, err := s.authenticationService.Call(ctx, domain.WriteFeatureScope); err != nil {
+		return nil, err
+	}
+
 	err := s.deleteFeatureService.Call(ctx, &domain.DeleteFeatureParams{
 		Name: req.GetName(),
 	})

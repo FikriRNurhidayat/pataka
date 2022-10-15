@@ -8,6 +8,10 @@ import (
 )
 
 func (s *Server) DeleteAudience(ctx context.Context, req *audiencev1.DeleteAudienceRequest) (*audiencev1.DeleteAudienceResponse, error) {
+	if _, err := s.authenticationService.Call(ctx, domain.WriteAudienceScope); err != nil {
+		return nil, err
+	}
+
 	err := s.deleteAudienceService.Call(ctx, &domain.DeleteAudienceParams{
 		AudienceId:  req.GetAudienceId(),
 		FeatureName: req.GetFeatureName(),

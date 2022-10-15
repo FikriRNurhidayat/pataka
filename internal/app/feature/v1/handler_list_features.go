@@ -9,7 +9,10 @@ import (
 )
 
 func (s *Server) ListFeatures(ctx context.Context, req *featurev1.ListFeaturesRequest) (*featurev1.ListFeaturesResponse, error) {
-	// TODO: Find a better way
+	if _, err := s.authenticationService.Call(ctx, domain.ReadFeatureScope); err != nil {
+		return nil, err
+	}
+
 	var (
 		enabled *bool
 		e       bool

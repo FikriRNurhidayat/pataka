@@ -45,10 +45,7 @@ func (s *ListFeaturesService) Call(ctx context.Context, params *domain.ListFeatu
 	}, nil
 }
 
-func NewListFeaturesService(
-	featureRepository domain.FeatureRepository,
-	logger grpclog.LoggerV2,
-) domain.FeaturesListable {
+func NewListFeaturesService(featureRepository domain.FeatureRepository, logger grpclog.LoggerV2) domain.FeaturesListable {
 	return &ListFeaturesService{
 		featureRepository: featureRepository,
 		logger:            logger,

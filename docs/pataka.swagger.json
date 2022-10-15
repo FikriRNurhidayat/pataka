@@ -9,11 +9,6 @@
       "email": "fikrirnurhidayat@gmail.com"
     }
   },
-  "tags": [
-    {
-      "name": "AudienceService"
-    }
-  ],
   "consumes": [
     "application/json"
   ],
@@ -21,6 +16,102 @@
     "application/json"
   ],
   "paths": {
+    "/v1/features": {
+      "get": {
+        "summary": "List Features",
+        "description": "Retrieve feature collections.",
+        "operationId": "ListFeatures",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListFeaturesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page_number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "FEATURE_STATUS_UNSPECIFIED",
+              "FEATURE_STATUS_ENABLED",
+              "FEATURE_STATUS_DISABLED"
+            ],
+            "default": "FEATURE_STATUS_UNSPECIFIED"
+          }
+        ],
+        "tags": [
+          "Features"
+        ]
+      },
+      "post": {
+        "summary": "Create Feature",
+        "description": "Add new feature resource in your feature flags system.\nCan be toggled on and off on [UpdateFeature](/#/UpdateFeature).",
+        "operationId": "CreateFeature",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateFeatureResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateFeatureRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Features"
+        ]
+      }
+    },
     "/v1/features/{feature_name}/audiences": {
       "get": {
         "summary": "List Audiences",
@@ -305,6 +396,115 @@
           "Audiences"
         ]
       }
+    },
+    "/v1/features/{name}": {
+      "get": {
+        "summary": "Get Feature",
+        "description": "Retrieve feature resource by it's name. It will return feature object,\nand enabled or disabled state.",
+        "operationId": "GetFeature",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetFeatureResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Features"
+        ]
+      },
+      "delete": {
+        "summary": "Delete Feature",
+        "description": "Delete a feature resource.",
+        "operationId": "DeleteFeature",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteFeatureResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Features"
+        ]
+      },
+      "put": {
+        "summary": "Update Feature",
+        "description": "Update a feature resource, usually being used to toggle on and off.",
+        "operationId": "UpdateFeature",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateFeatureResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "enabled": {
+                  "type": "boolean"
+                }
+              },
+              "title": "rpc UpdateFeature"
+            }
+          }
+        ],
+        "tags": [
+          "Features"
+        ]
+      }
     }
   },
   "definitions": {
@@ -378,14 +578,83 @@
         }
       }
     },
+    "v1CreateFeatureRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "title": "rpc CreateFeature"
+    },
+    "v1CreateFeatureResponse": {
+      "type": "object",
+      "properties": {
+        "feature": {
+          "$ref": "#/definitions/v1Feature"
+        }
+      }
+    },
     "v1DeleteAudienceResponse": {
       "type": "object"
+    },
+    "v1DeleteFeatureResponse": {
+      "type": "object"
+    },
+    "v1Feature": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "enabled_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1FeatureStatus": {
+      "type": "string",
+      "enum": [
+        "FEATURE_STATUS_UNSPECIFIED",
+        "FEATURE_STATUS_ENABLED",
+        "FEATURE_STATUS_DISABLED"
+      ],
+      "default": "FEATURE_STATUS_UNSPECIFIED"
     },
     "v1GetAudienceResponse": {
       "type": "object",
       "properties": {
         "audience": {
           "$ref": "#/definitions/v1Audience"
+        }
+      }
+    },
+    "v1GetFeatureResponse": {
+      "type": "object",
+      "properties": {
+        "feature": {
+          "$ref": "#/definitions/v1Feature"
         }
       }
     },
@@ -416,11 +685,46 @@
         }
       }
     },
+    "v1ListFeaturesResponse": {
+      "type": "object",
+      "properties": {
+        "page_number": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "page_size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "page_count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Feature"
+          }
+        }
+      }
+    },
     "v1UpdateAudienceResponse": {
       "type": "object",
       "properties": {
         "audience": {
           "$ref": "#/definitions/v1Audience"
+        }
+      }
+    },
+    "v1UpdateFeatureResponse": {
+      "type": "object",
+      "properties": {
+        "feature": {
+          "$ref": "#/definitions/v1Feature"
         }
       }
     }

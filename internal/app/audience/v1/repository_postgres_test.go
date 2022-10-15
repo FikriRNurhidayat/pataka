@@ -210,28 +210,6 @@ func TestAudiencePostgresRepository_List(t *testing.T) {
 		on   func(*MockPostgresRepository, *input, *output)
 	}{
 		{
-			name: "Filter specified and failed",
-			in: &input{
-				ctx: context.Background(),
-				args: &domain.AudienceListArgs{
-					Limit:  10,
-					Offset: 0,
-					Sort:   "",
-					Filter: &domain.AudienceFilterArgs{},
-				},
-			},
-			out: &output{
-				audiences: nil,
-				err:       fmt.Errorf("sqlx.bindNamedMapper: unsupported map type: %T", ""),
-			},
-			on: func(mpr *MockPostgresRepository, i *input, o *output) {
-				mdb := &mdriver.DB{}
-				mdb.On("BindNamed", "", *i.args.Filter).Return("", []interface{}{}, o.err)
-
-				mpr.db = mdb
-			},
-		},
-		{
 			name: "Filter specified but empty and failed to prepare statement",
 			in: &input{
 				ctx: context.Background(),
@@ -596,30 +574,6 @@ func TestPostgresRepository_GetBy(t *testing.T) {
 		on   func(*MockPostgresRepository, *input, *output)
 	}{
 		{
-			name: "Failed to bind statement during filtering",
-			in: &input{
-				ctx: context.Background(),
-				args: &domain.AudienceGetByArgs{
-					Sort: "-created_at",
-					Filter: &domain.AudienceFilterArgs{
-						FeatureName: "midtrans-payment-",
-						AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
-						Enabled:     new(bool),
-					},
-				},
-			},
-			out: &output{
-				audience: nil,
-				err:      fmt.Errorf("sqlx.bindNamedMapper: failed to bind argumnets"),
-			},
-			on: func(mpr *MockPostgresRepository, i *input, o *output) {
-				mdb := &mdriver.DB{}
-				mdb.On("BindNamed", "(feature_audiences.enabled = :enabled) AND (feature_audiences.feature_name = :feature_name) AND (feature_audiences.audience_id IN (:audience_id))", *i.args.Filter).Return("", []interface{}{}, o.err)
-
-				mpr.db = mdb
-			},
-		},
-		{
 			name: "Filter and sort but failed to prepare statement",
 			in: &input{
 				ctx: context.Background(),
@@ -920,27 +874,6 @@ func TestPostgresRepository_Size(t *testing.T) {
 		on   func(*MockPostgresRepository, *input, *output)
 	}{
 		{
-			name: "Failed to bind statement during filtering",
-			in: &input{
-				ctx: context.Background(),
-				args: &domain.AudienceFilterArgs{
-					FeatureName: "midtrans-payment-",
-					AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
-					Enabled:     new(bool),
-				},
-			},
-			out: &output{
-				size: 0,
-				err:  fmt.Errorf("sqlx.bindNamedMapper: failed to bind argumnets"),
-			},
-			on: func(mpr *MockPostgresRepository, i *input, o *output) {
-				mdb := &mdriver.DB{}
-				mdb.On("BindNamed", "(feature_audiences.enabled = :enabled) AND (feature_audiences.feature_name = :feature_name) AND (feature_audiences.audience_id IN (:audience_id))", *i.args).Return("", []interface{}{}, o.err)
-
-				mpr.db = mdb
-			},
-		},
-		{
 			name: "Filter but failed to prepare statement",
 			in: &input{
 				ctx: context.Background(),
@@ -1088,26 +1021,6 @@ func TestPostgresRepository_DeleteBy(t *testing.T) {
 		out  *output
 		on   func(*MockPostgresRepository, *input, *output)
 	}{
-		{
-			name: "Failed to bind statement during filtering",
-			in: &input{
-				ctx: context.Background(),
-				args: &domain.AudienceFilterArgs{
-					FeatureName: "midtrans-payment-",
-					AudienceIds: []string{"75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0", "75d0e418-8b7b-4fc4-bd95-3c5cb3da3bb0"},
-					Enabled:     new(bool),
-				},
-			},
-			out: &output{
-				err: fmt.Errorf("sqlx.bindNamedMapper: failed to bind argumnets"),
-			},
-			on: func(mpr *MockPostgresRepository, i *input, o *output) {
-				mdb := &mdriver.DB{}
-				mdb.On("BindNamed", "(feature_audiences.enabled = :enabled) AND (feature_audiences.feature_name = :feature_name) AND (feature_audiences.audience_id IN (:audience_id))", *i.args).Return("", []interface{}{}, o.err)
-
-				mpr.db = mdb
-			},
-		},
 		{
 			name: "Filter but failed to prepare statement",
 			in: &input{

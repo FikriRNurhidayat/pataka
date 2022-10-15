@@ -28,10 +28,7 @@ func (s *GetFeatureService) Call(ctx context.Context, params *domain.GetFeatureP
 	return domain.ToFeatureResult[domain.GetFeatureResult](feature), nil
 }
 
-func NewGetFeatureService(
-	featureRepository domain.FeatureRepository,
-	logger grpclog.LoggerV2,
-) domain.FeatureGetable {
+func NewGetFeatureService(featureRepository domain.FeatureRepository, logger grpclog.LoggerV2) domain.FeatureGetable {
 	return &GetFeatureService{
 		featureRepository: featureRepository,
 		logger:            logger,

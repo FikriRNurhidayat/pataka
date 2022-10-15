@@ -57,10 +57,7 @@ func (s *UpdateFeatureService) Call(ctx context.Context, params *domain.UpdateFe
 	return domain.ToFeatureResult[domain.UpdateFeatureResult](feature), nil
 }
 
-func NewUpdateFeatureService(
-	unitOfWork domain.UnitOfWork,
-	logger grpclog.LoggerV2,
-) domain.FeatureUpdatable {
+func NewUpdateFeatureService(unitOfWork domain.UnitOfWork, logger grpclog.LoggerV2) domain.FeatureUpdatable {
 	return &UpdateFeatureService{
 		unitOfWork: unitOfWork,
 		logger:     logger,

@@ -39,5 +39,6 @@ func Sort(sortStr string, allowedCols map[string]string) (query string) {
 func Paginate(limit uint32, offset uint32) (query string, args []interface{}) {
 	query = " LIMIT ? OFFSET ?"
 	args = []interface{}{limit, offset}
+
 	return query, args
 }

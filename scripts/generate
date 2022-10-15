@@ -1,0 +1,4 @@
+#!/bin/sh
+
+buf generate
+find docs -name '*.swagger.json' | xargs -I "{}" sh -c "(jq 'del(.tags)' {} > {}.tmp.json) && mv {}.tmp.json {}"

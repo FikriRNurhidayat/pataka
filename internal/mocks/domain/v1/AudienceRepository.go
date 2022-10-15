@@ -42,13 +42,13 @@ func (_m *AudienceRepository) DeleteBy(ctx context.Context, args *domain.Audienc
 	return r0
 }
 
-// Get provides a mock function with given fields: ctx, fn, ui
-func (_m *AudienceRepository) Get(ctx context.Context, fn string, ui string) (*domain.Audience, error) {
-	ret := _m.Called(ctx, fn, ui)
+// Get provides a mock function with given fields: ctx, featureName, audienceId
+func (_m *AudienceRepository) Get(ctx context.Context, featureName string, audienceId string) (*domain.Audience, error) {
+	ret := _m.Called(ctx, featureName, audienceId)
 
 	var r0 *domain.Audience
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) *domain.Audience); ok {
-		r0 = rf(ctx, fn, ui)
+		r0 = rf(ctx, featureName, audienceId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*domain.Audience)
@@ -57,7 +57,7 @@ func (_m *AudienceRepository) Get(ctx context.Context, fn string, ui string) (*d
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, fn, ui)
+		r1 = rf(ctx, featureName, audienceId)
 	} else {
 		r1 = ret.Error(1)
 	}

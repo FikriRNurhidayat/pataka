@@ -8,6 +8,10 @@ import (
 )
 
 func (s *Server) UpdateFeature(ctx context.Context, req *featurev1.UpdateFeatureRequest) (*featurev1.UpdateFeatureResponse, error) {
+	if _, err := s.authenticationService.Call(ctx, domain.WriteFeatureScope); err != nil {
+		return nil, err
+	}
+
 	result, err := s.updateFeatureService.Call(ctx, &domain.UpdateFeatureParams{
 		Name:    req.GetName(),
 		Label:   req.GetLabel(),

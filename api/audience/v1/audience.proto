@@ -14,7 +14,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     version: "1.0.0";
     contact: {
       name: "Fikri Rahmat Nurhidayat";
-      url: "https://mail.google.com";
+      url: "https://github.com/fikrirnurhidayat";
       email: "fikrirnurhidayat@gmail.com";
     };
   };

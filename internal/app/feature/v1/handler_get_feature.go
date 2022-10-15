@@ -8,6 +8,10 @@ import (
 )
 
 func (s *Server) GetFeature(ctx context.Context, req *featurev1.GetFeatureRequest) (*featurev1.GetFeatureResponse, error) {
+	if _, err := s.authenticationService.Call(ctx, domain.ReadFeatureScope); err != nil {
+		return nil, err
+	}
+
 	result, err := s.getFeatureService.Call(ctx, &domain.GetFeatureParams{
 		Name: req.GetName(),
 	})

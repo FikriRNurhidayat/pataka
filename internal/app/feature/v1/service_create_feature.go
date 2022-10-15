@@ -57,10 +57,7 @@ func (s *CreateFeatureService) Call(ctx context.Context, params *domain.CreateFe
 	return domain.ToFeatureResult[domain.CreateFeatureResult](feature), nil
 }
 
-func NewCreateFeatureService(
-	unitOfWork domain.UnitOfWork,
-	logger grpclog.LoggerV2,
-) domain.FeatureCreateable {
+func NewCreateFeatureService(unitOfWork domain.UnitOfWork, logger grpclog.LoggerV2) domain.FeatureCreateable {
 	return &CreateFeatureService{
 		unitOfWork: unitOfWork,
 		logger:     logger,

@@ -8,6 +8,10 @@ import (
 )
 
 func (s *Server) GetAudience(ctx context.Context, req *audiencev1.GetAudienceRequest) (*audiencev1.GetAudienceResponse, error) {
+	if _, err := s.authenticationService.Call(ctx, domain.ReadAudienceScope); err != nil {
+		return nil, err
+	}
+
 	result, err := s.getAudienceService.Call(ctx, &domain.GetAudienceParams{
 		AudienceId:  req.GetAudienceId(),
 		FeatureName: req.GetFeatureName(),

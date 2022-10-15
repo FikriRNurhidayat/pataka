@@ -9,7 +9,10 @@ import (
 )
 
 func (s *Server) ListAudiences(ctx context.Context, req *audiencev1.ListAudiencesRequest) (*audiencev1.ListAudiencesResponse, error) {
-	// TODO: Find a better way
+	if _, err := s.authenticationService.Call(ctx, domain.ReadAudienceScope); err != nil {
+		return nil, err
+	}
+
 	var (
 		enabled *bool
 		e       bool

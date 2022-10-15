@@ -1,7 +1,9 @@
 package feature
 
 import (
+	"github.com/fikrirnurhidayat/ffgo/internal/app/authentication"
 	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc/grpclog"
 
 	featurev1 "github.com/fikrirnurhidayat/ffgo/protobuf/feature/v1"
@@ -9,14 +11,15 @@ import (
 
 type Server struct {
 	featurev1.UnimplementedFeatureServiceServer
-	createFeatureService domain.FeatureCreateable
-	deleteFeatureService domain.FeatureDeletable
-	updateFeatureService domain.FeatureUpdatable
-	getFeatureService    domain.FeatureGetable
-	listFeaturesService  domain.FeaturesListable
-	featureRepository    domain.FeatureRepository
-	unitOfWork           domain.UnitOfWork
-	logger               grpclog.LoggerV2
+	authenticationService domain.Authenticatable
+	createFeatureService  domain.FeatureCreateable
+	deleteFeatureService  domain.FeatureDeletable
+	updateFeatureService  domain.FeatureUpdatable
+	getFeatureService     domain.FeatureGetable
+	listFeaturesService   domain.FeaturesListable
+	featureRepository     domain.FeatureRepository
+	unitOfWork            domain.UnitOfWork
+	logger                grpclog.LoggerV2
 }
 
 type ServerOpts func(*Server)
@@ -28,6 +31,8 @@ func NewServer(opts ...ServerOpts) featurev1.FeatureServiceServer {
 		set(s)
 	}
 
+	secretKey := viper.GetString("secretKey")
+	s.authenticationService = authentication.New(secretKey)
 	s.createFeatureService = NewCreateFeatureService(s.unitOfWork, s.logger)
 	s.listFeaturesService = NewListFeaturesService(s.featureRepository, s.logger)
 	s.getFeatureService = NewGetFeatureService(s.featureRepository, s.logger)
