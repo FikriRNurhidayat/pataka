@@ -1,7 +1,7 @@
 package feature
 
 import (
-	"github.com/fikrirnurhidayat/ffgo/internal/app/authentication"
+	auth "github.com/fikrirnurhidayat/ffgo/internal/auth"
 	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc/grpclog"
@@ -32,7 +32,7 @@ func NewServer(opts ...ServerOpts) featurev1.FeatureServiceServer {
 	}
 
 	secretKey := viper.GetString("secretKey")
-	s.authenticationService = authentication.New(secretKey)
+	s.authenticationService = auth.New(secretKey)
 	s.createFeatureService = NewCreateFeatureService(s.unitOfWork, s.logger)
 	s.listFeaturesService = NewListFeaturesService(s.featureRepository, s.logger)
 	s.getFeatureService = NewGetFeatureService(s.featureRepository, s.logger)

@@ -19,7 +19,7 @@ func (u *repository) FeatureRepository() domain.FeatureRepository {
 	return u.featureRepository
 }
 
-func makeRepository(db driver.DB, logger grpclog.LoggerV2, factory *RepositoryFactory) domain.Repository {
+func makePostgresRepository(db driver.DB, logger grpclog.LoggerV2, factory *PostgresRepositoryFactory) domain.Repository {
 	return &repository{
 		featureRepository:  factory.FeatureRepository(db, logger),
 		audienceRepository: factory.AudienceRepository(db, logger),

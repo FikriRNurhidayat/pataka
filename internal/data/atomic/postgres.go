@@ -10,24 +10,24 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type tx struct {
+type PostgresUnitOfWork struct {
 	db      *sqlx.DB
 	logger  grpclog.LoggerV2
-	factory *RepositoryFactory
+	factory *PostgresRepositoryFactory
 }
 
-func (u *tx) Do(ctx context.Context, block domain.Block) error {
+func (u *PostgresUnitOfWork) Do(ctx context.Context, block domain.Block) error {
 	tx, err := u.db.Beginx()
 	if err != nil {
-		u.logger.Errorf("[unit-of-work] failed to start transaction: %s", err.Error())
+		u.logger.Errorf("[postgres-unit-of-work] failed to start transaction: %s", err.Error())
 		return err
 	}
 
-	repository := makeRepository(tx, u.logger, u.factory)
+	repository := makePostgresRepository(tx, u.logger, u.factory)
 
 	if err := block(repository); err != nil {
 		if err := tx.Rollback(); err != nil {
-			u.logger.Errorf("[unit-of-work] failed to abort transaction: %s", err.Error())
+			u.logger.Errorf("[postgres-unit-of-work] failed to abort transaction: %s", err.Error())
 			return status.Error(codes.Internal, "Internal server error")
 		}
 
@@ -35,9 +35,9 @@ func (u *tx) Do(ctx context.Context, block domain.Block) error {
 	}
 
 	if err := tx.Commit(); err != nil {
-		u.logger.Errorf("[unit-of-work] failed to commit transaction: %s", err.Error())
+		u.logger.Errorf("[postgres-unit-of-work] failed to commit transaction: %s", err.Error())
 		if err := tx.Rollback(); err != nil {
-			u.logger.Errorf("[unit-of-work] failed to abort transaction: %s", err.Error())
+			u.logger.Errorf("[postgres-unit-of-work] failed to abort transaction: %s", err.Error())
 			return status.Error(codes.Internal, "Internal server error")
 		}
 
@@ -47,8 +47,8 @@ func (u *tx) Do(ctx context.Context, block domain.Block) error {
 	return nil
 }
 
-func New(db *sqlx.DB, logger grpclog.LoggerV2, factory *RepositoryFactory) domain.UnitOfWork {
-	return &tx{
+func NewPostgresUnitOfWork(db *sqlx.DB, logger grpclog.LoggerV2, factory *PostgresRepositoryFactory) domain.UnitOfWork {
+	return &PostgresUnitOfWork{
 		db:      db,
 		logger:  logger,
 		factory: factory,

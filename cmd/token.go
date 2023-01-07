@@ -6,9 +6,10 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/fikrirnurhidayat/ffgo/internal/app/authentication"
+	"github.com/fikrirnurhidayat/ffgo/internal/auth"
 	"github.com/fikrirnurhidayat/ffgo/internal/command/create"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // tokenCmd represents the token command
@@ -17,7 +18,7 @@ var tokenCmd = &cobra.Command{
 	Short: "A brief description of your command",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		authenticationService := authentication.New("Rahasia")
+		authenticationService := authentication.New(viper.GetString("secretKey"))
 		createTokenCmd := create.NewCreateTokenCmd(authenticationService)
 
 		scopes, _ := cmd.Flags().GetStringSlice("scopes")
@@ -30,4 +31,5 @@ var tokenCmd = &cobra.Command{
 func init() {
 	createCmd.AddCommand(tokenCmd)
 	tokenCmd.Flags().StringSlice("scopes", []string{}, "Define token scopes.")
+	viper.BindEnv("secretKey", "SECRET_KEY")
 }

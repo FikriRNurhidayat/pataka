@@ -54,10 +54,11 @@ func initConfig() {
 		viper.SetConfigName(".ffgo")
 	}
 
-	viper.SetEnvPrefix("pataka")
-	viper.BindEnv("database_url")
-	viper.BindEnv("grpc_port")
-	viper.BindEnv("gateway_port")
+	viper.SetEnvPrefix("PATAKA")
+	viper.BindEnv("GRPC_PORT")
+	viper.BindEnv("GATEWAY_PORT")
+	viper.BindEnv("DATABASE_URL")
+	viper.BindEnv("REDIS_URL")
 	viper.AutomaticEnv()
 	viper.ReadInConfig()
 }

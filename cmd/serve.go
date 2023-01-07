@@ -29,7 +29,10 @@ func init() {
 	viper.BindPFlag("bind", serveCmd.Flags().Lookup("bind"))
 	viper.BindPFlag("grpc.port", serveCmd.Flags().Lookup("grpc-port"))
 	viper.BindPFlag("gateway.port", serveCmd.Flags().Lookup("gateway-port"))
-	viper.BindEnv("database.url", "DATABASE_URL")
-	viper.BindEnv("log.level", "LOG_LEVEL")
-	viper.BindEnv("bind", "BIND")
+	viper.BindEnv("database.url", "PATAKA_DATABASE_URL")
+	viper.BindEnv("database.pool", "PATAKA_DATABASE_POOL")
+	viper.BindEnv("redis.url", "PATAKA_REDIS_URL")
+	viper.BindEnv("log.level", "PATAKA_LOG_LEVEL")
+	viper.BindEnv("bind", "PATAKA_BIND")
+	viper.BindEnv("secretKey", "PATAKA_SECRET_KEY")
 }

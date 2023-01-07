@@ -1,7 +1,7 @@
 package audience
 
 import (
-	"github.com/fikrirnurhidayat/ffgo/internal/app/authentication"
+	"github.com/fikrirnurhidayat/ffgo/internal/auth"
 	"github.com/fikrirnurhidayat/ffgo/internal/domain/v1"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc/grpclog"

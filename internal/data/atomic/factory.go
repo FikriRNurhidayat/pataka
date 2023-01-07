@@ -5,7 +5,7 @@ import (
 	"github.com/fikrirnurhidayat/ffgo/internal/driver"
 )
 
-type RepositoryFactory struct {
+type PostgresRepositoryFactory struct {
 	FeatureRepository  driver.Factory[domain.FeatureRepository]
 	AudienceRepository driver.Factory[domain.AudienceRepository]
 }
